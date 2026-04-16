@@ -19,7 +19,7 @@ public class InitCmdExecutor implements CommandExecutor{
     }
 
     private void createDeckDir() {
-        Path path = Path.of("/Users/admin/lab/decks/.deck");
+        Path path = Path.of(".deck");
 
         if (Files.exists(path)) {
             System.out.println("이미 .deck 디렉토리가 존재합니다.");
