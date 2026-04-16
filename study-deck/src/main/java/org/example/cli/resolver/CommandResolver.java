@@ -1,5 +1,5 @@
 package org.example.cli.resolver;
 
 public interface CommandResolver {
-    void resolve(String cmd);
+    void resolve(String[] args);
 }

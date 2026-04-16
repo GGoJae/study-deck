@@ -1,5 +1,7 @@
 package org.example.cli.excutor;
 
+import org.example.cli.model.Command;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,9 +15,8 @@ public class InitCmdExecutor implements CommandExecutor{
     }
 
     @Override
-    public void execute() {
+    public void execute(Command command) {
         createDeckDir();
-
     }
 
     private void createDeckDir() {

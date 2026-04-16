@@ -5,15 +5,15 @@ import org.example.cli.resolver.CommandResolver;
 public class BasicCommandInput implements CommandInput{
 
     private final CommandResolver commandResolver;
-    private final String command;
+    private final String[] args;
 
-    public BasicCommandInput(CommandResolver commandResolver, String command) {
+    public BasicCommandInput(CommandResolver commandResolver, String[] args) {
         this.commandResolver = commandResolver;
-        this.command = command;
+        this.args = args;
     }
 
     @Override
     public void execute() {
-        commandResolver.resolve(command);
+        commandResolver.resolve(args);
     }
 }
