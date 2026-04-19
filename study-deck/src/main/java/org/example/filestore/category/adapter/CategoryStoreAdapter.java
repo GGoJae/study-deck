@@ -4,7 +4,7 @@ import org.example.core.category.domain.Category;
 import org.example.core.category.port.out.CategoryStore;
 import org.example.filestore.data.category.manager.CategoryManager;
 import org.example.filestore.data.meta.manager.MetaDataManager;
-import org.example.filestore.file.manager.FileSystemManager;
+import org.example.filestore.filesystem.manager.FileSystemManager;
 import org.example.filestore.shared.model.CategoryModel;
 
 import java.io.IOException;
@@ -34,7 +34,11 @@ public class CategoryStoreAdapter implements CategoryStore {
 
         try {
             categoryAssemble(category);
-            CategoryModel categoryModel = fileSystemManager.createCategoryFile(category);
+            String fileName = fileSystemManager.createCategoryFile();
+
+            CategoryModel categoryModel = new CategoryModel(category.getId(), fileName, category.getOwnerId(), category.getName(),
+                    category.getSortKey(), category.getCreatedAt(), category.getUpdatedAt());
+
             categoryManager.save(categoryModel);
 
             categoryManager.commit();
@@ -49,7 +53,7 @@ public class CategoryStoreAdapter implements CategoryStore {
         }
     }
 
-    private void categoryAssemble(Category category) {
+    private void categoryAssemble(Category category) throws IOException {
         Long nextId = metaDataManager.nextCategoryId();
         Instant now = Instant.now();
         category.setId(nextId);

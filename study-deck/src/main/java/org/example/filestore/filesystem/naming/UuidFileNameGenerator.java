@@ -1,4 +1,4 @@
-package org.example.filestore.file.naming;
+package org.example.filestore.filesystem.naming;
 
 import java.util.UUID;
 

@@ -1,36 +1,42 @@
-package org.example.filestore.data.meta.manager;
+package org.example.filestore.data.category.manager;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.filestore.common.JsonMapper;
-import org.example.filestore.shared.model.Focus;
-import org.example.filestore.shared.model.MetaDataModel;
+import org.example.filestore.shared.model.CategoryModel;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
+import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 import static org.example.filestore.shared.Constant.*;
-import static org.example.filestore.shared.PathConfig.META_DATA_TMP_PATH;
-import static org.example.filestore.shared.PathConfig.META_DATA_WORK_PATH;
+import static org.example.filestore.shared.PathConfig.CATEGORY_TMP_PATH;
+import static org.example.filestore.shared.PathConfig.CATEGORY_WORK_PATH;
 
-public class JacksonMetaDataManagerV1 implements MetaDataManager{
+
+public class CategoryManagerV1 implements CategoryManager{
 
     private final ObjectMapper mapper = JsonMapper.getInstance();
 
     @Override
-    public Focus getFocus() throws IOException {
+    public void save(CategoryModel categoryModel) throws IOException {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
 
-        return metaData.focus();
+        List<CategoryModel> models = mapper.readValue(CATEGORY_TMP_PATH.toFile(), new TypeReference<>() {});
+
+        models.add(categoryModel);
+
+        mapper.writeValue(CATEGORY_TMP_PATH.toFile(), models);
     }
 
     @Override
-    public Long nextCategoryId() throws IOException {
+    public String getFilename(Long categoryId) throws IOException {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
 
-        return metaData.counters().nextCategoryId();
+        List<CategoryModel> models = mapper.readValue(CATEGORY_TMP_PATH.toFile(), new TypeReference<>() {});
+
+        return models.stream().filter(c -> c.id().equals(categoryId)).map(CategoryModel::fileName).findAny().orElse(null);
     }
 
     @Override
@@ -38,7 +44,7 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
         if (isTransactionOn()) throw new IllegalStateException(ALREADY_STARTED_TRANSACTION);
 
         try {
-            Files.createDirectory(META_DATA_TMP_PATH);
+            Files.copy(CATEGORY_WORK_PATH, CATEGORY_TMP_PATH, COPY_ATTRIBUTES);
         } catch (IOException e) {
             System.out.println(TRANSACTION_FAILED);
             throw new RuntimeException(e);
@@ -50,7 +56,7 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
 
         try {
-            Files.move(META_DATA_TMP_PATH, META_DATA_WORK_PATH);
+            Files.move(CATEGORY_TMP_PATH, CATEGORY_WORK_PATH);
         } catch (IOException e) {
             System.out.println(COMMIT_FAILED);
             throw new RuntimeException(e);
@@ -62,18 +68,18 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
 
         try {
-            Files.delete(META_DATA_TMP_PATH);
+            Files.delete(CATEGORY_TMP_PATH);
         } catch (IOException e) {
             System.out.println(ROLLBACK_FAILED);
             throw new RuntimeException(e);
         }
     }
 
-    private boolean isTransactionOn() {
-        return Files.exists(META_DATA_TMP_PATH);
+    private static boolean isTransactionOff() {
+        return Files.notExists(CATEGORY_TMP_PATH);
     }
 
-    private boolean isTransactionOff() {
-        return Files.notExists(META_DATA_TMP_PATH);
+    private static boolean isTransactionOn() {
+        return Files.exists(CATEGORY_TMP_PATH);
     }
 }
