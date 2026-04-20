@@ -1,6 +1,7 @@
 package org.example.cli.excutor;
 
-import org.example.cli.model.Command;
+import org.example.cli.model.command.Command;
+import org.example.filestore.api.FileStoreApi;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,6 +9,11 @@ import java.nio.file.Path;
 
 public class InitCmdExecutor implements CommandExecutor{
     private static final String RESOLVED_COMMAND = "init";
+    private final FileStoreApi fileStoreApi;
+
+    public InitCmdExecutor(FileStoreApi fileStoreApi) {
+        this.fileStoreApi = fileStoreApi;
+    }
 
     @Override
     public String canResolvedCommand() {
@@ -20,19 +26,6 @@ public class InitCmdExecutor implements CommandExecutor{
     }
 
     private void createDeckDir() {
-        Path path = Path.of(".deck");
-
-        if (Files.exists(path)) {
-            System.out.println("이미 .deck 디렉토리가 존재합니다.");
-            return;
-        }
-
-        try {
-            Files.createDirectories(path);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.out.println(".deck 생성이 완료됐습니다.");
+        fileStoreApi.fileStoreInit();
     }
 }

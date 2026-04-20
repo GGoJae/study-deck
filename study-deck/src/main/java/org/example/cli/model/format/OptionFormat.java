@@ -1,6 +1,6 @@
-package org.example.cli.command.model;
+package org.example.cli.model.format;
 
-import org.example.cli.model.Option;
+import org.example.cli.model.command.Option;
 
 public record OptionFormat(
     String value,
@@ -20,8 +20,8 @@ public record OptionFormat(
 
     public boolean isRightOptionFormat(Option option) {
         if (!this.value.equals(option.value())) return false;
-        if (this.hasArgument.equals(Essential.TRUE) && option.argument() == null) return false;
-        if (this.hasArgument.equals(Essential.FALSE) && option.argument() != null) return false;
+        if (this.hasArgument.equals(Essential.REQUIRED) && option.argument() == null) return false;
+        if (this.hasArgument.equals(Essential.NONE) && option.argument() != null) return false;
 
         return true;
     }
