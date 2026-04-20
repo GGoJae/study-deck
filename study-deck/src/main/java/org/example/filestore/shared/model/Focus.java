@@ -6,4 +6,11 @@ public record Focus(
         Type targetType,
         Long targetId
 ) {
+    public Focus changeCategoryFocus(Long categoryId) {
+        return new Focus(categoryId, null, null, null);
+    }
+
+    public static Focus empty() {
+        return new Focus(null, null, null, null);
+    }
 }

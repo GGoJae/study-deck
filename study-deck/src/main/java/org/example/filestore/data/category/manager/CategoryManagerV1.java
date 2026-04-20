@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
+import static java.nio.file.StandardCopyOption.*;
 import static org.example.filestore.shared.Constant.*;
 import static org.example.filestore.shared.PathConfig.CATEGORY_TMP_PATH;
 import static org.example.filestore.shared.PathConfig.CATEGORY_WORK_PATH;
@@ -56,7 +56,7 @@ public class CategoryManagerV1 implements CategoryManager{
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
 
         try {
-            Files.move(CATEGORY_TMP_PATH, CATEGORY_WORK_PATH);
+            Files.move(CATEGORY_TMP_PATH, CATEGORY_WORK_PATH, REPLACE_EXISTING);
         } catch (IOException e) {
             System.out.println(COMMIT_FAILED);
             throw new RuntimeException(e);
@@ -81,5 +81,11 @@ public class CategoryManagerV1 implements CategoryManager{
 
     private static boolean isTransactionOn() {
         return Files.exists(CATEGORY_TMP_PATH);
+    }
+
+    @Override
+    public void init() throws IOException {
+        Files.createFile(CATEGORY_WORK_PATH);
+        mapper.writeValue(CATEGORY_WORK_PATH.toFile(), List.of());
     }
 }

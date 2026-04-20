@@ -1,4 +1,4 @@
-package org.example.cli.model;
+package org.example.cli.model.command;
 
 public record Option(
         String value,

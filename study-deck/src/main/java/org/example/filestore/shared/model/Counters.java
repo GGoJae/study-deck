@@ -5,4 +5,11 @@ public record Counters(
         long nextSubCategoryId,
         long nextCardId
 ) {
+    public Counters increaseCategoryId() {
+        return new Counters(
+                this.nextCategoryId + 1,
+                this.nextSubCategoryId,
+                this.nextCardId
+        );
+    }
 }

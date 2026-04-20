@@ -12,6 +12,7 @@ import java.nio.file.Path;
 
 import static org.example.filestore.shared.Constant.*;
 import static org.example.filestore.shared.PathConfig.FILE_SYSTEM_TMP_PATH;
+import static org.example.filestore.shared.PathConfig.FILE_SYSTEM_WORK_PATH;
 
 public class FileSystemManagerV1 implements FileSystemManager {
 
@@ -78,6 +79,9 @@ public class FileSystemManagerV1 implements FileSystemManager {
 
         try {
             // 내부에 파일이 있으면 DirectoryNotEmptyException 터지는데 이거 어떻게 해결할건지 생각해보기
+            Focus focus = metaDataManager.getFocus();
+            String fileName = dataManager.getFileName(focus);
+            Files.delete(FILE_SYSTEM_TMP_PATH.resolve(fileName));
             Files.delete(FILE_SYSTEM_TMP_PATH);
         } catch (IOException e) {
             System.out.println(ROLLBACK_FAILED);
@@ -91,5 +95,10 @@ public class FileSystemManagerV1 implements FileSystemManager {
 
     private boolean isTransactionOn() {
         return Files.exists(FILE_SYSTEM_TMP_PATH);
+    }
+
+    @Override
+    public void init() throws IOException {
+        Files.createDirectory(FILE_SYSTEM_WORK_PATH);
     }
 }

@@ -28,8 +28,8 @@ public class CategoryStoreAdapter implements CategoryStore {
 
     @Override
     public Category save(Category category) {
-        categoryManager.transaction();
         fileSystemManager.transaction();
+        categoryManager.transaction();
         metaDataManager.transaction();
 
         try {
@@ -40,14 +40,15 @@ public class CategoryStoreAdapter implements CategoryStore {
                     category.getSortKey(), category.getCreatedAt(), category.getUpdatedAt());
 
             categoryManager.save(categoryModel);
+            metaDataManager.selectCategory(category.getId());
 
-            categoryManager.commit();
             fileSystemManager.commit();
+            categoryManager.commit();
             metaDataManager.commit();
             return category;
         } catch (IOException e) {
-            categoryManager.rollback();
             fileSystemManager.rollback();
+            categoryManager.rollback();
             metaDataManager.rollback();
             throw new RuntimeException(e);
         }

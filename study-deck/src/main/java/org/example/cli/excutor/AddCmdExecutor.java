@@ -1,6 +1,6 @@
 package org.example.cli.excutor;
 
-import org.example.cli.model.Command;
+import org.example.cli.model.command.Command;
 
 public class AddCmdExecutor implements CommandExecutor{
 
