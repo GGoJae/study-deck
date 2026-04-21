@@ -17,6 +17,8 @@ public class CategoryCommandServiceV1 implements CategoryCommandPort {
         category.setOwnerId(model.ownerId());
         category.setName(model.name());
         category.setSortKey(model.sortKey());
+        category.setCreatedUser(model.ownerId());
+        category.setUpdatedUser(model.ownerId());
 
         Category save = store.save(category);
 
