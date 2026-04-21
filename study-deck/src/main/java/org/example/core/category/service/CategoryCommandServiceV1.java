@@ -14,6 +14,7 @@ public class CategoryCommandServiceV1 implements CategoryCommandPort {
 
     public Long create(CreateCategory model) {
         Category category = new Category();
+        category.setOwnerId(model.ownerId());
         category.setName(model.name());
         category.setSortKey(model.sortKey());
 

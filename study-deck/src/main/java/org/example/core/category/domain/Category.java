@@ -59,9 +59,4 @@ public class Category {
         this.updatedAt = updatedAt;
     }
 
-    public static class CategoryBuilder {
-        private String name;
-        private int sortKey;
-    }
-
 }
