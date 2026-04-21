@@ -13,4 +13,6 @@ public interface MetaDataManager extends Transactionable, FileManager {
     Long nextCategoryId() throws IOException;
 
     void selectCategory(Long id) throws IOException;
+
+    Long currentCategory() throws IOException;
 }

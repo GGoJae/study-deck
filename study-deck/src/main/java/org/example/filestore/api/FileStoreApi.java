@@ -1,6 +1,6 @@
 package org.example.filestore.api;
 
-import org.example.filestore.data.category.manager.CategoryManager;
+import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
 
@@ -37,6 +37,14 @@ public class FileStoreApi {
             System.out.println("FileStore 생성이 완료됐습니다.");
         } catch (IOException e) {
             System.out.println("FileStore 생성에 실패했습니다.");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Long currentCategory() {
+        try {
+            return metaDataManager.currentCategory();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

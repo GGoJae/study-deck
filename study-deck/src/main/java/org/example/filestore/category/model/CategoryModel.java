@@ -1,4 +1,4 @@
-package org.example.filestore.shared.model;
+package org.example.filestore.category.model;
 
 import java.time.Instant;
 
@@ -9,6 +9,8 @@ public record CategoryModel(
         String name,
         int sortKey,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Long createdUser,
+        Long updatedUser
 ) {
 }

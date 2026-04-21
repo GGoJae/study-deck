@@ -1,7 +1,7 @@
 package org.example.filestore.filesystem.path;
 
 import org.example.filestore.data.DataManager;
-import org.example.filestore.data.category.manager.CategoryManager;
+import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.shared.model.Focus;
 
 import java.io.IOException;

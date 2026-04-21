@@ -67,6 +67,7 @@ public class FileSystemManagerV1 implements FileSystemManager {
             Path target = pathCalculator.getPath(focus);
 
             Files.move(Path.of(FILE_SYSTEM_TMP_PATH.toString(), filename), target);
+            Files.delete(FILE_SYSTEM_TMP_PATH);
         } catch (IOException e) {
             System.out.println(COMMIT_FAILED);
             throw new RuntimeException(e);

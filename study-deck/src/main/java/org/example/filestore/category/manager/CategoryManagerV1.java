@@ -1,13 +1,16 @@
-package org.example.filestore.data.category.manager;
+package org.example.filestore.category.manager;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.core.category.domain.Category;
 import org.example.filestore.common.JsonMapper;
-import org.example.filestore.shared.model.CategoryModel;
+import org.example.filestore.category.model.CategoryModel;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import static java.nio.file.StandardCopyOption.*;
 import static org.example.filestore.shared.Constant.*;
@@ -37,6 +40,28 @@ public class CategoryManagerV1 implements CategoryManager{
         List<CategoryModel> models = mapper.readValue(CATEGORY_TMP_PATH.toFile(), new TypeReference<>() {});
 
         return models.stream().filter(c -> c.id().equals(categoryId)).map(CategoryModel::fileName).findAny().orElse(null);
+    }
+
+    @Override
+    public Optional<CategoryModel> findById(Long categoryId) throws IOException {
+        return mapper.readValue(CATEGORY_WORK_PATH.toFile(), new TypeReference<List<CategoryModel>>() {})
+                .stream()
+                .filter(c -> categoryId.equals(c.id()))
+                .findAny();
+    }
+
+    @Override
+    public List<CategoryModel> findByOwnerId(Long ownerId, int offset, int limit) throws IOException {
+        List<CategoryModel> models = mapper.readValue(CATEGORY_WORK_PATH.toFile(), new TypeReference<List<CategoryModel>>() {
+                })
+                .stream()
+                .sorted(Comparator.comparingInt(CategoryModel::sortKey))
+                .toList();
+
+        if (offset >= models.size()) return List.of();
+        limit = Math.min(limit, models.size());
+
+        return models.subList(offset, offset + limit);
     }
 
     @Override

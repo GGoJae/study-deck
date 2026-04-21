@@ -49,6 +49,12 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     }
 
     @Override
+    public Long currentCategory() throws IOException {
+        MetaDataModel metaData = mapper.readValue(META_DATA_WORK_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+        return metaData.focus().categoryId();
+    }
+
+    @Override
     public void transaction() {
         if (isTransactionOn()) throw new IllegalStateException(ALREADY_STARTED_TRANSACTION);
 
