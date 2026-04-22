@@ -12,6 +12,7 @@ import org.example.cli.resolver.CommandResolver;
 import org.example.cli.resolver.parser.BasicParserV1;
 import org.example.cli.resolver.parser.CommandParser;
 import org.example.cli.resolver.validator.CommandValidator;
+import org.example.cli.resolver.validator.CommandValidatorV1;
 import org.example.core.category.mapper.CategoryToModelMapperV1;
 import org.example.core.category.mapper.DomainToModelMapper;
 import org.example.core.category.permission.CategoryPermissionChecker;
@@ -55,7 +56,7 @@ public abstract class AppConfig {
         PathCalculator pathCalculator = new PathCalculatorV1(categoryManager, dataManager);
         FileSystemManager fileSystemManager = new FileSystemManagerV1(metaDataManager, pathCalculator, dataManager, fileNameGenerator);
         FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, fileSystemManager, metaDataManager);
-        CommandValidator commandValidator = new CommandValidator();
+        CommandValidator commandValidator = new CommandValidatorV1();
         CommandParser commandParser = new BasicParserV1(commandValidator);
         ModelToDomainMapper modelToDomainMapper = new ModelToDomainMapperV1();
         categoryStore = new CategoryStoreAdapter(fileSystemManager, categoryManager, metaDataManager, modelToDomainMapper);

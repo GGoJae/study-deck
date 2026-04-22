@@ -4,6 +4,7 @@ import org.example.cli.model.format.OptionFormat;
 import org.example.cli.model.command.Command;
 import org.example.cli.model.command.Option;
 import org.example.cli.resolver.validator.CommandValidator;
+import org.example.cli.resolver.validator.CommandValidatorV1;
 
 import java.util.ArrayList;
 import java.util.Arrays;
