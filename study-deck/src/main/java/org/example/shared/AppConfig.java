@@ -6,7 +6,12 @@ import org.example.cli.excutor.DefaultCmdExecutor;
 import org.example.cli.excutor.InitCmdExecutor;
 import org.example.cli.info.RequesterInfo;
 import org.example.cli.input.BasicCommandInput;
+import org.example.cli.model.format.CommandFormat;
+import org.example.cli.model.format.Essential;
+import org.example.cli.model.format.OptionFormat;
 import org.example.cli.output.SystemOutOutput;
+import org.example.cli.repository.CmdFormatRepository;
+import org.example.cli.repository.MemoryCmdFormatRepository;
 import org.example.cli.resolver.BasicCommandResolverV1;
 import org.example.cli.resolver.CommandResolver;
 import org.example.cli.resolver.parser.BasicParserV1;
@@ -40,6 +45,7 @@ import org.example.filestore.filesystem.path.PathCalculator;
 import org.example.filestore.filesystem.path.PathCalculatorV1;
 
 import java.util.List;
+import java.util.Map;
 
 public abstract class AppConfig {
 
@@ -56,7 +62,10 @@ public abstract class AppConfig {
         PathCalculator pathCalculator = new PathCalculatorV1(categoryManager, dataManager);
         FileSystemManager fileSystemManager = new FileSystemManagerV1(metaDataManager, pathCalculator, dataManager, fileNameGenerator);
         FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, fileSystemManager, metaDataManager);
-        CommandValidator commandValidator = new CommandValidatorV1();
+
+        List<CommandFormat> commandFormats = commandFormatList();
+        CmdFormatRepository cmdFormatRepository = new MemoryCmdFormatRepository(commandFormats);
+        CommandValidator commandValidator = new CommandValidatorV1(cmdFormatRepository);
         CommandParser commandParser = new BasicParserV1(commandValidator);
         ModelToDomainMapper modelToDomainMapper = new ModelToDomainMapperV1();
         categoryStore = new CategoryStoreAdapter(fileSystemManager, categoryManager, metaDataManager, modelToDomainMapper);
@@ -72,10 +81,11 @@ public abstract class AppConfig {
         commandResolver = new BasicCommandResolverV1(commandParser, commandExecutors, defaultCmdExecutor);
     }
 
-    private static List<CommandExecutor> cmdExecutorList(FileStoreApi fileStoreApi, RequesterInfo requesterInfo, SystemOutOutput output) {
-        InitCmdExecutor initCmdExecutor = new InitCmdExecutor(fileStoreApi);
-        CatCmdExecutor catCmdExecutor = new CatCmdExecutor(categoryCommandPort, categoryQueryPort, requesterInfo, output, fileStoreApi);
-        return List.of(initCmdExecutor, catCmdExecutor);
+    private static List<CommandFormat> commandFormatList() {
+        CommandFormat addCmd = createAddCmd();
+        CommandFormat initCmd = createInitCmd();
+        CommandFormat catCmd = createCatCmd();
+        return List.of(addCmd, initCmd, catCmd);
     }
 
     public static CommandResolver commandResolverInstance() {
@@ -92,6 +102,25 @@ public abstract class AppConfig {
 
     public static CategoryStore categoryStoreInstance() {
         return categoryStore;
+    }
+
+    private static List<CommandExecutor> cmdExecutorList(FileStoreApi fileStoreApi, RequesterInfo requesterInfo, SystemOutOutput output) {
+        InitCmdExecutor initCmdExecutor = new InitCmdExecutor(fileStoreApi);
+        CatCmdExecutor catCmdExecutor = new CatCmdExecutor(categoryCommandPort, categoryQueryPort, requesterInfo, output, fileStoreApi);
+        return List.of(initCmdExecutor, catCmdExecutor);
+    }
+
+    private static CommandFormat createAddCmd() {
+        OptionFormat cOption = new OptionFormat("-c", Essential.REQUIRED);
+        return new CommandFormat("add", Essential.NONE, Essential.REQUIRED, Map.of(cOption.value(), cOption));
+    }
+
+    private static CommandFormat createInitCmd() {
+        return new CommandFormat("init", Essential.NONE, Essential.NONE, Map.of());
+    }
+
+    private static CommandFormat createCatCmd() {
+        return new CommandFormat("cat", Essential.REQUIRED, Essential.OPTIONAL, Map.of());
     }
 
     public static void appStart(String[] args) {
