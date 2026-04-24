@@ -4,7 +4,6 @@ import org.example.cli.model.format.OptionFormat;
 import org.example.cli.model.command.Command;
 import org.example.cli.model.command.Option;
 import org.example.cli.resolver.validator.CommandValidator;
-import org.example.cli.resolver.validator.CommandValidatorV1;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +34,7 @@ public class BasicParserV1 implements CommandParser{
 
                 int optionIdx = -1;
                 for (int i = 0; i < optionsAndArguments.length; i++) {
-                    if (optionsAndArguments[i].startsWith("-")) {
+                    if (OptionFormat.isRightValueFormat(optionsAndArguments[i])) {
                         optionIdx = i;
                         break;
                     }
@@ -51,8 +50,7 @@ public class BasicParserV1 implements CommandParser{
 
                 Option.OptionBuilder optionBuilder = new Option.OptionBuilder();
                 for (String oa : optionsAndArguments) {
-                    if (OptionFormat.isOptionFormat(oa)) {
-                        if (Objects.equals(oa.length(), 1)) throw new IllegalArgumentException("옵션 값이 올바르지 않습니다.");
+                    if (OptionFormat.isRightValueFormat(oa)) {
                         if (optionBuilder.hasValue()) {
                             Option option = optionBuilder.build();
                             options.add(option);
@@ -60,9 +58,7 @@ public class BasicParserV1 implements CommandParser{
                         }
                         optionBuilder.value(oa);
                     } else {
-                        Option option = optionBuilder.argument(oa).build();
-                        options.add(option);
-                        optionBuilder = new Option.OptionBuilder();
+                        optionBuilder.addArgument(oa);
                     }
                 }
                 if (optionBuilder.hasValue()) {

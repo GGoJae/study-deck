@@ -1,12 +1,24 @@
 package org.example.cli.model.command;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public record Option(
         String value,
-        String argument
+        List<String> arguments
 ) {
+
+    public Option {
+        arguments = (arguments == null) ? List.of() : List.copyOf(arguments);
+    }
+
+    public boolean hasArgument() {
+        return !arguments.isEmpty();
+    }
+
     public static class OptionBuilder {
         private String value;
-        private String argument;
+        private final List<String> arguments = new ArrayList<>();
 
         public boolean hasValue() {
             return value != null;
@@ -18,15 +30,15 @@ public record Option(
             return this;
         }
 
-        public OptionBuilder argument(String argument) {
-            if (this.argument != null) throw new IllegalStateException();
-            this.argument = argument;
+        public OptionBuilder addArgument(String argument) {
+            if (this.value == null) throw new IllegalStateException();
+            this.arguments.add(argument);
             return this;
         }
 
         public Option build() {
             if (this.value == null) throw new IllegalStateException();
-            return new Option(this.value, this.argument);
+            return new Option(this.value, this.arguments);
         }
     }
 

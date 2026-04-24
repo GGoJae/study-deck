@@ -8,6 +8,7 @@ import org.example.cli.repository.CmdFormatRepository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public class CommandValidatorV1 implements CommandValidator{
@@ -19,6 +20,7 @@ public class CommandValidatorV1 implements CommandValidator{
 
     @Override
     public boolean isRightFormat(Command command) {
+        Objects.requireNonNull(command);
         Optional<CommandFormat> commandOpt = cmdFormatRepository.findByCmd(command.cmd());
 
         return commandOpt.map(cf -> cf.isRightFormat(command)).orElse(false);

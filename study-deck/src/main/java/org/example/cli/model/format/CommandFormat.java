@@ -5,6 +5,7 @@ import org.example.cli.model.command.Option;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public record CommandFormat(
         String cmd,
@@ -12,20 +13,30 @@ public record CommandFormat(
         Essential optionRequirement,
         Map<String, OptionFormat> optionFormats
 ) {
-    public boolean isWrongOptionFormat(Command command) {
+    public CommandFormat {
+        if (Objects.isNull(cmd) || cmd.isBlank()) {
+            throw new IllegalArgumentException("cmd는 필수입니다.");
+        }
+        argumentRequirement = (argumentRequirement == null) ? Essential.OPTIONAL : argumentRequirement;
+        optionRequirement = (optionRequirement == null) ? Essential.OPTIONAL : optionRequirement;
+        optionFormats = (optionFormats == null) ? Map.of() : Map.copyOf(optionFormats);
+    }
+    public boolean isWrongFormat(Command command) {
         return !this.isRightFormat(command);
     }
     public boolean isRightFormat(Command command) {
+        if (command == null || command.cmd() == null || command.cmd().isBlank()) return false;
+
+        if (!Objects.equals(command.cmd(), this.cmd)) return false;
+        if (this.argumentRequirement == Essential.REQUIRED && !command.hasArgument()) return false;
+        if (this.argumentRequirement == Essential.NONE && command.hasArgument()) return false;
+        if (this.optionRequirement == Essential.REQUIRED && !command.hasOptions()) return false;
+        if (this.optionRequirement == Essential.NONE && command.hasOptions()) return false;
+
         List<Option> options = command.options();
-        if (!this.cmd.equals(command.cmd())) return false;
-        if (this.optionRequirement.equals(Essential.REQUIRED) && options.isEmpty()) return false;
-        if (this.optionRequirement.equals(Essential.NONE) && !options.isEmpty()) return false;
-        try {
-            for (Option o : options) {
-                if (optionFormats.get(o).isWrongOptionFormat(o)) return false;
-            }
-        } catch (Exception e) {
-            return false;
+        for (Option o : options) {
+            OptionFormat format = optionFormats.get(o.value());
+            if (format == null || format.isWrongOptionFormat(o)) return false;
         }
 
         return true;
