@@ -9,7 +9,6 @@ import org.example.filestore.filesystem.manager.FileSystemManager;
 import org.example.filestore.category.model.CategoryModel;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,14 +37,15 @@ public class CategoryStoreAdapter implements CategoryStore {
         metaDataManager.transaction();
 
         try {
-            categoryAssemble(category);
+            Long nextId = metaDataManager.nextCategoryId();
+            category = category.withId(nextId);
             String fileName = fileSystemManager.createCategoryFile();
 
             CategoryModel categoryModel =
                     new CategoryModel(
-                        category.getId(), fileName, category.getOwnerId(), category.getName(),
-                        category.getSortKey(), category.getCreatedAt(), category.getUpdatedAt(),
-                        category.getCreatedUser(), category.getUpdatedUser()
+                            category.getId(), fileName, category.getOwnerId(), category.getName(),
+                            category.getSortKey(), category.getCreatedAt(), category.getUpdatedAt(),
+                            category.getCreatedUser(), category.getUpdatedUser()
                     );
 
             categoryManager.save(categoryModel);
@@ -84,11 +84,14 @@ public class CategoryStoreAdapter implements CategoryStore {
         }
     }
 
-    private void categoryAssemble(Category category) throws IOException {
-        Long nextId = metaDataManager.nextCategoryId();
-        Instant now = Instant.now();
-        category.setId(nextId);
-        category.setCreatedAt(now);
-        category.setUpdatedAt(now);
+    @Override
+    public List<Integer> findAllCategorySortKey(Long ownerId) {
+        try {
+            return categoryManager.findByOwnerId(ownerId, 0, 100).stream()
+                    .map(CategoryModel::sortKey).toList();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
+
 }

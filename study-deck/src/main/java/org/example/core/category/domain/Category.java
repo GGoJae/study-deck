@@ -5,8 +5,19 @@ import java.util.Objects;
 
 
 public class Category {
-    private Long id;
 
+    public Category(Long id, Long ownerId, String name, int sortKey, Instant createdAt, Instant updatedAt, Long createdUser, Long updatedUser) {
+        this.id = id;
+        this.ownerId = ownerId;
+        this.name = name;
+        this.sortKey = sortKey;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.createdUser = createdUser;
+        this.updatedUser = updatedUser;
+    }
+
+    private Long id;
     private Long ownerId;
     private String name;
     private int sortKey;
@@ -19,65 +30,37 @@ public class Category {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public Long getOwnerId() {
         return ownerId;
-    }
-
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public int getSortKey() {
         return sortKey;
-    }
-
-    public void setSortKey(int sortKey) {
-        this.sortKey = sortKey;
     }
 
     public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt) {
-        if (this.createdAt != null) throw new IllegalStateException();
-        this.createdAt = createdAt;
-    }
-
     public Instant getUpdatedAt() {
         return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     public Long getCreatedUser() {
         return createdUser;
     }
 
-    public void setCreatedUser(Long createdUser) {
-        this.createdUser = createdUser;
-    }
-
     public Long getUpdatedUser() {
         return updatedUser;
     }
 
-    public void setUpdatedUser(Long updatedUser) {
-        this.updatedUser = updatedUser;
+    public Category withId(long id) {
+        return new Category(id, this.ownerId, this.name, this.sortKey,
+                this.createdAt, this.updatedAt, this.createdUser, this.updatedUser);
     }
 
     @Override

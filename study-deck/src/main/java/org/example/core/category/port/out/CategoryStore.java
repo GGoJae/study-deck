@@ -12,4 +12,6 @@ public interface CategoryStore {
     Optional<Category> findById(Long categoryId);
 
     List<Category> findByOwnerId(Long ownerId, int offset, int limit);
+
+    List<Integer> findAllCategorySortKey(Long ownerId);
 }

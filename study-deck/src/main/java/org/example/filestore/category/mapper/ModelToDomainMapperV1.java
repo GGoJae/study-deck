@@ -8,17 +8,11 @@ import java.util.List;
 public class ModelToDomainMapperV1 implements ModelToDomainMapper{
     @Override
     public Category toDomain(CategoryModel model) {
-        Category category = new Category();
-        category.setId(model.id());
-        category.setOwnerId(model.ownerId());
-        category.setName(model.name());
-        category.setSortKey(model.sortKey());
-        category.setCreatedAt(model.createdAt());
-        category.setUpdatedAt(model.updatedAt());
-        category.setCreatedUser(model.createdUser());
-        category.setUpdatedUser(model.updatedUser());
-
-        return category;
+        return new Category(
+                model.id(), model.ownerId(), model.name(),
+                model.sortKey(), model.createdAt(), model.updatedAt(),
+                model.createdUser(), model.updatedUser()
+        );
     }
 
     @Override
