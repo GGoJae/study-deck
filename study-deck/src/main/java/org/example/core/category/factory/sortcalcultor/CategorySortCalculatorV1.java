@@ -29,20 +29,19 @@ public class CategorySortCalculatorV1 implements CategorySortCalculator{
 
         if (!sortKeys.contains(hopeSortKey)) return hopeSortKey;
 
-        Collections.sort(sortKeys);
-        int sameValueIdx = sortKeys.indexOf(hopeSortKey);
+        List<Integer> sortedSortKeys = sortKeys.stream().sorted(Integer::compareTo).toList();
 
-        if (sameValueIdx == sortKeys.size() - 1) return hopeSortKey + AMOUNT;
+        int sameValueIdx = sortedSortKeys.indexOf(hopeSortKey);
 
-        Integer nextValue = sortKeys.get(sameValueIdx + 1);
+        if (sameValueIdx == sortedSortKeys.size() - 1) return hopeSortKey + AMOUNT;
 
-        int finalValue = (nextValue + hopeSortKey) / 2;
+        Integer nextValue = sortedSortKeys.get(sameValueIdx + 1);
 
-        while (!sortKeys.contains(finalValue)) {
-            finalValue += AMOUNT;
+        if (Objects.equals(hopeSortKey, nextValue)) {
+            return hopeSortKey;
         }
 
-        return finalValue;
+        return (nextValue + hopeSortKey) / 2;
     }
 
 }
