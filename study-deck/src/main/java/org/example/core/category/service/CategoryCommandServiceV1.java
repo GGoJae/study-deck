@@ -15,6 +15,7 @@ public class CategoryCommandServiceV1 implements CategoryCommandPort {
         this.categoryFactory = categoryFactory;
     }
 
+    @Override
     public Long create(CreateCategory model) {
         Category category = categoryFactory.create(model.ownerId(), model.name(), model.sortKey());
         Category save = store.save(category);
