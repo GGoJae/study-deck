@@ -53,6 +53,26 @@ public class FileSystemManagerV1 implements FileSystemManager {
     }
 
     @Override
+    public String createSubCategory(String categoryFilename) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        String filename = fileNameGenerator.getFileName();
+
+        Path subCategoryDirPath = FILE_SYSTEM_TMP_PATH.resolve(categoryFilename).resolve(filename);
+        Files.createDirectory(subCategoryDirPath);
+
+        return filename;
+    }
+
+    @Override
+    public void deleteSubCategory(String categoryFilename, String subCategoryFilename) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        Path target = FILE_SYSTEM_TMP_PATH.resolve(categoryFilename).resolve(subCategoryFilename);
+        FileUtils.deleteDirectory(target.toFile());
+    }
+
+    @Override
     public void transaction() {
         if (isTransactionOn()) throw new IllegalStateException(ALREADY_STARTED_TRANSACTION);
         try {

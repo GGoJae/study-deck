@@ -26,4 +26,19 @@ public record Focus(
     public static Focus empty() {
         return new Focus(null, null, null, null);
     }
+
+    public Focus ifIsCurrentSubCategoryReset(Long subCategoryId) {
+        if (Objects.equals(this.subCategoryId, subCategoryId)) {
+            return new Focus(this.categoryId, null, null, null);
+        }
+        return this;
+    }
+
+    public Focus changeSubCategoryFocus(Long subCategoryId) {
+        if (Objects.equals(this.subCategoryId, subCategoryId)) {
+            return this;
+        }
+
+        return new Focus(this.categoryId, subCategoryId, null, null);
+    }
 }

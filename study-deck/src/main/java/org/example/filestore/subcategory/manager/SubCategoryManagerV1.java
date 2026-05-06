@@ -2,6 +2,7 @@ package org.example.filestore.subcategory.manager;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.core.domain.subcategory.SubCategory;
 import org.example.filestore.common.JsonMapper;
 import org.example.filestore.subcategory.model.SubCategoryModel;
 
@@ -35,6 +36,46 @@ public class SubCategoryManagerV1 implements SubCategoryManager {
                 .stream()
                 .filter(s -> Objects.equals(subCategoryId, s.id()))
                 .findAny();
+    }
+
+    @Override
+    public void save(SubCategoryModel model) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        List<SubCategoryModel> models = mapper.readValue(SUBCATEGORY_TMP_PATH.toFile(), new TypeReference<List<SubCategoryModel>>() {});
+
+        models.add(model);
+
+        mapper.writeValue(SUBCATEGORY_TMP_PATH.toFile(), models);
+    }
+
+    @Override
+    public SubCategoryModel delete(Long subCategoryId) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        List<SubCategoryModel> models = mapper.readValue(SUBCATEGORY_TMP_PATH.toFile(), new TypeReference<List<SubCategoryModel>>() {});
+        SubCategoryModel model = models.stream().filter(m -> Objects.equals(m.id(), subCategoryId)).findAny().orElseThrow();
+        models.remove(model);
+        mapper.writeValue(SUBCATEGORY_TMP_PATH.toFile(), models);
+
+        return model;
+    }
+
+    @Override
+    public void update(SubCategory subCategory) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+        List<SubCategoryModel> models = mapper.readValue(SUBCATEGORY_TMP_PATH.toFile(), new TypeReference<List<SubCategoryModel>>() {});
+
+        List<SubCategoryModel> updated = models.stream().map(
+                m -> {
+                    if (Objects.equals(m.id(), subCategory.getId())) {
+                        return m.update(subCategory);
+                    }
+                    return m;
+                }
+        ).toList();
+
+        mapper.writeValue(SUBCATEGORY_TMP_PATH.toFile(), updated);
     }
 
     @Override

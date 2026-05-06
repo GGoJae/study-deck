@@ -84,7 +84,7 @@ public class Category {
         if (requesterId == null) {
             throw new IllegalArgumentException("수정자 id는 필수입니다.");
         }
-        validateOwner(requesterId);
+        permissionCheck(requesterId);
         Instant now = Instant.now();
 
         return new Category(
@@ -97,7 +97,7 @@ public class Category {
         if (requesterId == null) {
             throw new IllegalArgumentException("수정자 id는 필수입니다.");
         }
-        validateOwner(requesterId);
+        permissionCheck(requesterId);
         Instant now = Instant.now();
 
         return new Category(
@@ -116,23 +116,14 @@ public class Category {
         );
     }
 
-    private void validateOwner(Long requesterId) {
+    public void permissionCheck(Long requesterId) {
         if (!Objects.equals(this.ownerId, requesterId)) {
-            try {
-                throw new IllegalStateException("권한이 없습니다.");
-            } catch (IllegalStateException e) {
-                throw new RuntimeException(e);
-            }
+            throw new IllegalStateException("권한이 없습니다.");
         }
     }
 
     public boolean isOwner(Long requesterId) {
-        try {
-            validateOwner(requesterId);
-            return true;
-        } catch (IllegalStateException e) {
-            return false;
-        }
+        return Objects.equals(this.ownerId, requesterId);
     }
 
     @Override

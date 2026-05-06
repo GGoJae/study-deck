@@ -1,9 +1,6 @@
 package org.example.shared;
 
-import org.example.cli.excutor.CatCmdExecutor;
-import org.example.cli.excutor.CommandExecutor;
-import org.example.cli.excutor.DefaultCmdExecutor;
-import org.example.cli.excutor.InitCmdExecutor;
+import org.example.cli.excutor.*;
 import org.example.cli.info.RequesterInfo;
 import org.example.cli.input.BasicCommandInput;
 import org.example.cli.model.format.CommandFormat;
@@ -29,9 +26,21 @@ import org.example.core.application.category.service.CategoryInternalQueryServic
 import org.example.core.application.category.service.CategoryQueryServiceV1;
 import org.example.core.application.category.usecase.CategoryCommandUseCase;
 import org.example.core.application.category.usecase.CategoryQueryUseCase;
+import org.example.core.application.subcategory.factory.SubCategoryFactory;
+import org.example.core.application.subcategory.factory.SubCategoryFactoryV1;
+import org.example.core.application.subcategory.factory.sortcalculator.SubCategorySortCalculator;
+import org.example.core.application.subcategory.factory.sortcalculator.SubCategorySortCalculatorV1;
+import org.example.core.application.subcategory.mapper.SubCategoryToModelMapper;
+import org.example.core.application.subcategory.service.SubCategoryCommandServiceV1;
+import org.example.core.application.subcategory.service.SubCategoryInternalQueryServiceV1;
+import org.example.core.application.subcategory.service.SubCategoryQueryServiceV1;
+import org.example.core.application.subcategory.usecase.SubCategoryCommandUseCase;
+import org.example.core.application.subcategory.usecase.SubCategoryQueryUseCase;
 import org.example.core.domain.category.Category;
 import org.example.core.domain.category.CategoryPort;
 import org.example.core.domain.category.CategoryStore;
+import org.example.core.domain.subcategory.SubCategory;
+import org.example.core.domain.subcategory.SubCategoryPort;
 import org.example.filestore.api.FileStoreApi;
 import org.example.filestore.category.adapter.CategoryStoreAdapter;
 import org.example.filestore.category.manager.CategoryManager;
@@ -49,6 +58,11 @@ import org.example.filestore.filesystem.naming.FileNameGenerator;
 import org.example.filestore.filesystem.naming.UuidFileNameGenerator;
 import org.example.filestore.filesystem.path.PathCalculator;
 import org.example.filestore.filesystem.path.PathCalculatorV1;
+import org.example.filestore.subcategory.adapter.SubCategoryStoreAdapter;
+import org.example.filestore.subcategory.manager.SubCategoryManager;
+import org.example.filestore.subcategory.manager.SubCategoryManagerV1;
+import org.example.filestore.subcategory.mapper.ModelToSubCategoryMapperV1;
+import org.example.filestore.subcategory.model.SubCategoryModel;
 
 import java.util.List;
 import java.util.Map;
@@ -59,6 +73,9 @@ public abstract class AppConfig {
     private static final CategoryCommandUseCase categoryCommandPort;
     private static final CategoryQueryUseCase categoryQueryPort;
     private static final CategoryStore categoryStore;
+    private static final SubCategoryCommandUseCase subCategoryCommandUseCase;
+    private static final SubCategoryQueryUseCase subCategoryQueryUseCase;
+
 
     static {
         CategoryManager categoryManager = new CategoryManagerV1();
@@ -67,7 +84,8 @@ public abstract class AppConfig {
         FileNameGenerator fileNameGenerator = new UuidFileNameGenerator();
         PathCalculator pathCalculator = new PathCalculatorV1(categoryManager, dataManager);
         FileSystemManager fileSystemManager = new FileSystemManagerV1(metaDataManager, pathCalculator, dataManager, fileNameGenerator);
-        FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, fileSystemManager, metaDataManager);
+        SubCategoryManager subCategoryManager = new SubCategoryManagerV1();
+        FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, fileSystemManager, metaDataManager);
 
         List<CommandFormat> commandFormats = commandFormatList();
         CmdFormatRepository cmdFormatRepository = new MemoryCmdFormatRepository(commandFormats);
@@ -81,6 +99,18 @@ public abstract class AppConfig {
         categoryCommandPort = new CategoryCommandServiceV1(categoryStore, categoryFactory);
         DomainToModelMapper domainToModelMapper = new CategoryToModelMapperV1();
         categoryQueryPort = new CategoryQueryServiceV1(categoryPort, domainToModelMapper);
+
+
+        ModelToDomainMapper<SubCategory, SubCategoryModel> modelToSubCategoryMapper = new ModelToSubCategoryMapperV1();
+
+        SubCategoryStoreAdapter subCategoryStore = new SubCategoryStoreAdapter(fileSystemManager, categoryManager, metaDataManager, subCategoryManager, modelToSubCategoryMapper);
+        SubCategorySortCalculator subCategorySortCalculator = new SubCategorySortCalculatorV1(subCategoryStore);
+        SubCategoryFactory subCategoryFactory = new SubCategoryFactoryV1(subCategorySortCalculator);
+        SubCategoryPort subCategoryPort = new SubCategoryInternalQueryServiceV1(subCategoryStore);
+        org.example.core.application.subcategory.mapper.DomainToModelMapper subCategoryToModelMapper = new SubCategoryToModelMapper();
+
+        subCategoryCommandUseCase = new SubCategoryCommandServiceV1(categoryPort, subCategoryStore, subCategoryFactory);
+        subCategoryQueryUseCase = new SubCategoryQueryServiceV1(subCategoryPort, subCategoryToModelMapper);
         SystemOutOutput output = new SystemOutOutput();
         RequesterInfo requesterInfo = new RequesterInfo();
 
@@ -116,7 +146,8 @@ public abstract class AppConfig {
     private static List<CommandExecutor> cmdExecutorList(FileStoreApi fileStoreApi, RequesterInfo requesterInfo, SystemOutOutput output) {
         InitCmdExecutor initCmdExecutor = new InitCmdExecutor(fileStoreApi);
         CatCmdExecutor catCmdExecutor = new CatCmdExecutor(categoryCommandPort, categoryQueryPort, requesterInfo, output, fileStoreApi);
-        return List.of(initCmdExecutor, catCmdExecutor);
+        SubCmdExecutor subCmdExecutor = new SubCmdExecutor(requesterInfo, subCategoryQueryUseCase, subCategoryCommandUseCase, output, fileStoreApi);
+        return List.of(initCmdExecutor, catCmdExecutor, subCmdExecutor);
     }
 
     private static CommandFormat createAddCmd() {
@@ -145,10 +176,13 @@ public abstract class AppConfig {
     private static CommandFormat createSubCmd() {
         OptionFormat sOption = new OptionFormat("-s", Essential.REQUIRED);
         OptionFormat dOption = new OptionFormat("-d", Essential.REQUIRED);
+        OptionFormat nOption = new OptionFormat("-n", Essential.REQUIRED);
+
         return new CommandFormat("sub", Essential.OPTIONAL, Essential.OPTIONAL,
                 Map.of(
                         sOption.value(), sOption,
-                        dOption.value(), dOption
+                        dOption.value(), dOption,
+                        nOption.value(), nOption
                 ));
     }
 

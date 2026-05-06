@@ -45,16 +45,19 @@ public class SubCmdExecutor implements CommandExecutor{
         Long currentCategory = fileStoreApi.currentCategory();
         if (Objects.isNull(currentCategory)) {
             output.errorMessage("카테고리가 선택되지 않았습니다.");
+            return;
         }
 
         if (!command.hasArgument() && !command.hasOptions()) {
             showSubCategories(requesterId, currentCategory);
+            return;
         }
 
         if (!command.hasOptions() && command.hasArgument()) {
             List<String> arguments = command.arguments();
             String name = arguments.get(0);
             commandUseCase.createSubCategory(new CreateSubCategoryRequest(requesterId, currentCategory, name, null));
+            return;
         }
 
         List<Option> options = command.options();
@@ -104,7 +107,7 @@ public class SubCmdExecutor implements CommandExecutor{
     }
 
     private void showSubCategories(Long requesterId, Long currentCategory) {
-        Long currentSubCat = fileStoreApi.currentSubCat();
+        Long currentSubCat = fileStoreApi.currentSubCategory();
         List<SubCategoryCapture> subCategories = queryUseCase.getSubCategories(requesterId, currentCategory);
         output.subAndCurrentSub(subCategories, currentSubCat);
     }

@@ -88,6 +88,32 @@ public class SubCategory {
         return Objects.equals(this.ownerId, subCategoryId);
     }
 
+    public void permissionCheck(Long requesterId) {
+        if (!Objects.equals(this.ownerId, requesterId)) {
+            throw new IllegalStateException("권한이 없습니다.");
+        }
+    }
+
+    public SubCategory rename(String newName, Long requesterId) {
+        this.permissionCheck(requesterId);
+        return new SubCategory(
+                this.id, this.ownerId, this.parentCategoryId,
+                newName, this.sortKey, this.createdAt, this.updatedAt,
+                this.createdUser, this.updatedUser
+        );
+    }
+
+    public SubCategory withId(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("id 값을 넣어주세요.");
+        }
+        return new SubCategory(
+                id, this.ownerId, this.parentCategoryId,
+                this.name, this.sortKey, this.createdAt,
+                this.updatedAt, this.createdUser, this.updatedUser
+        );
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

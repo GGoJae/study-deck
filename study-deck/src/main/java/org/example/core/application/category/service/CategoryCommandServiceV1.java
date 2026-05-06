@@ -1,9 +1,9 @@
 package org.example.core.application.category.service;
 
-import org.example.core.application.category.factory.CategoryFactory;
-import org.example.core.domain.category.Category;
 import org.example.core.application.category.dto.request.CreateCategoryRequest;
+import org.example.core.application.category.factory.CategoryFactory;
 import org.example.core.application.category.usecase.CategoryCommandUseCase;
+import org.example.core.domain.category.Category;
 import org.example.core.domain.category.CategoryStore;
 
 public class CategoryCommandServiceV1 implements CategoryCommandUseCase {
@@ -37,11 +37,7 @@ public class CategoryCommandServiceV1 implements CategoryCommandUseCase {
     public void delete(Long requesterId, Long categoryId) {
         Category category = store.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
-
-        if (category.isOwner(requesterId)) {
-            store.delete(categoryId);
-        } else {
-            throw new IllegalStateException("삭제 권한이 없습니다.");
-        }
+        category.permissionCheck(requesterId);
+        store.delete(categoryId);
     }
 }

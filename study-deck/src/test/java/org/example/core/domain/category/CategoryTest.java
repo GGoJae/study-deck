@@ -382,7 +382,7 @@ class CategoryTest {
 
         // when, then
         assertThatThrownBy(() -> original.rename(newName, request))
-                .hasCauseInstanceOf(IllegalStateException.class)
+                .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("권한이 없습니다.");
 
     }
@@ -513,7 +513,7 @@ class CategoryTest {
 
         // when, then
         assertThatThrownBy(() -> original.reorder(newSortKey, request))
-                .hasCauseInstanceOf(IllegalStateException.class)
+                .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("권한이 없습니다.");
 
     }
