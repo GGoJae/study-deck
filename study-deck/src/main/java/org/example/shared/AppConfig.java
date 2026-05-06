@@ -18,24 +18,26 @@ import org.example.cli.resolver.parser.BasicParserV1;
 import org.example.cli.resolver.parser.CommandParser;
 import org.example.cli.resolver.validator.CommandValidator;
 import org.example.cli.resolver.validator.CommandValidatorV1;
-import org.example.core.category.factory.CategoryFactory;
-import org.example.core.category.factory.CategoryFactoryV1;
-import org.example.core.category.mapper.CategoryToModelMapperV1;
-import org.example.core.category.mapper.DomainToModelMapper;
-import org.example.core.category.permission.CategoryPermissionChecker;
-import org.example.core.category.permission.CategoryPermissionCheckerV1;
-import org.example.core.category.port.in.CategoryCommandPort;
-import org.example.core.category.port.in.CategoryQueryPort;
-import org.example.core.category.port.out.CategoryStore;
-import org.example.core.category.service.CategoryCommandServiceV1;
-import org.example.core.category.service.CategoryQueryServiceV1;
-import org.example.core.category.factory.sortcalcultor.CategorySortCalculator;
-import org.example.core.category.factory.sortcalcultor.CategorySortCalculatorV1;
+import org.example.core.application.category.factory.CategoryFactory;
+import org.example.core.application.category.factory.CategoryFactoryV1;
+import org.example.core.application.category.factory.sortcalcultor.CategorySortCalculator;
+import org.example.core.application.category.factory.sortcalcultor.CategorySortCalculatorV1;
+import org.example.core.application.category.mapper.CategoryToModelMapperV1;
+import org.example.core.application.category.mapper.DomainToModelMapper;
+import org.example.core.application.category.service.CategoryCommandServiceV1;
+import org.example.core.application.category.service.CategoryInternalQueryServiceV1;
+import org.example.core.application.category.service.CategoryQueryServiceV1;
+import org.example.core.application.category.usecase.CategoryCommandUseCase;
+import org.example.core.application.category.usecase.CategoryQueryUseCase;
+import org.example.core.domain.category.Category;
+import org.example.core.domain.category.CategoryPort;
+import org.example.core.domain.category.CategoryStore;
 import org.example.filestore.api.FileStoreApi;
 import org.example.filestore.category.adapter.CategoryStoreAdapter;
 import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.category.manager.CategoryManagerV1;
-import org.example.filestore.category.mapper.ModelToDomainMapper;
+import org.example.filestore.category.model.CategoryModel;
+import org.example.filestore.shared.ModelToDomainMapper;
 import org.example.filestore.category.mapper.ModelToDomainMapperV1;
 import org.example.filestore.data.DataManager;
 import org.example.filestore.data.DataManagerV1;
@@ -54,8 +56,8 @@ import java.util.Map;
 public abstract class AppConfig {
 
     private static final CommandResolver commandResolver;
-    private static final CategoryCommandPort categoryCommandPort;
-    private static final CategoryQueryPort categoryQueryPort;
+    private static final CategoryCommandUseCase categoryCommandPort;
+    private static final CategoryQueryUseCase categoryQueryPort;
     private static final CategoryStore categoryStore;
 
     static {
@@ -71,14 +73,14 @@ public abstract class AppConfig {
         CmdFormatRepository cmdFormatRepository = new MemoryCmdFormatRepository(commandFormats);
         CommandValidator commandValidator = new CommandValidatorV1(cmdFormatRepository);
         CommandParser commandParser = new BasicParserV1(commandValidator);
-        ModelToDomainMapper modelToDomainMapper = new ModelToDomainMapperV1();
+        ModelToDomainMapper<Category, CategoryModel> modelToDomainMapper = new ModelToDomainMapperV1();
         categoryStore = new CategoryStoreAdapter(fileSystemManager, categoryManager, metaDataManager, modelToDomainMapper);
+        CategoryPort categoryPort = new CategoryInternalQueryServiceV1(categoryStore);
         CategorySortCalculator sortCalculator = new CategorySortCalculatorV1(categoryStore);
         CategoryFactory categoryFactory = new CategoryFactoryV1(sortCalculator);
         categoryCommandPort = new CategoryCommandServiceV1(categoryStore, categoryFactory);
         DomainToModelMapper domainToModelMapper = new CategoryToModelMapperV1();
-        CategoryPermissionChecker categoryPermissionChecker = new CategoryPermissionCheckerV1(categoryStore);
-        categoryQueryPort = new CategoryQueryServiceV1(categoryStore, categoryPermissionChecker, domainToModelMapper);
+        categoryQueryPort = new CategoryQueryServiceV1(categoryPort, domainToModelMapper);
         SystemOutOutput output = new SystemOutOutput();
         RequesterInfo requesterInfo = new RequesterInfo();
 
@@ -91,18 +93,19 @@ public abstract class AppConfig {
         CommandFormat addCmd = createAddCmd();
         CommandFormat initCmd = createInitCmd();
         CommandFormat catCmd = createCatCmd();
-        return List.of(addCmd, initCmd, catCmd);
+        CommandFormat subCmd = createSubCmd();
+        return List.of(addCmd, initCmd, catCmd, subCmd);
     }
 
     public static CommandResolver commandResolverInstance() {
         return commandResolver;
     }
 
-    public static CategoryCommandPort categoryCommandPortInstance() {
+    public static CategoryCommandUseCase categoryCommandPortInstance() {
         return categoryCommandPort;
     }
 
-    public static CategoryQueryPort categoryQueryPortInstance() {
+    public static CategoryQueryUseCase categoryQueryPortInstance() {
         return categoryQueryPort;
     }
 
@@ -126,7 +129,27 @@ public abstract class AppConfig {
     }
 
     private static CommandFormat createCatCmd() {
-        return new CommandFormat("cat", Essential.REQUIRED, Essential.OPTIONAL, Map.of());
+        OptionFormat sOption = new OptionFormat("-s", Essential.REQUIRED);
+        OptionFormat nOption = new OptionFormat("-n", Essential.REQUIRED);
+        OptionFormat dOption = new OptionFormat("-d", Essential.REQUIRED);
+
+        return new CommandFormat("cat", Essential.OPTIONAL, Essential.OPTIONAL,
+                Map.of(
+                        sOption.value(), sOption,
+                        nOption.value(), nOption,
+                        dOption.value(), dOption
+                        )
+        );
+    }
+
+    private static CommandFormat createSubCmd() {
+        OptionFormat sOption = new OptionFormat("-s", Essential.REQUIRED);
+        OptionFormat dOption = new OptionFormat("-d", Essential.REQUIRED);
+        return new CommandFormat("sub", Essential.OPTIONAL, Essential.OPTIONAL,
+                Map.of(
+                        sOption.value(), sOption,
+                        dOption.value(), dOption
+                ));
     }
 
     public static void appStart(String[] args) {
