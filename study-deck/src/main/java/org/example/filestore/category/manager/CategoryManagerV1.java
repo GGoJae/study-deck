@@ -2,7 +2,7 @@ package org.example.filestore.category.manager;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.core.category.domain.Category;
+import org.example.core.domain.category.Category;
 import org.example.filestore.common.JsonMapper;
 import org.example.filestore.category.model.CategoryModel;
 
@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.nio.file.StandardCopyOption.*;
@@ -62,6 +63,36 @@ public class CategoryManagerV1 implements CategoryManager{
         limit = Math.min(limit, models.size());
 
         return models.subList(offset, offset + limit);
+    }
+
+    @Override
+    public void update(Category category) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+        List<CategoryModel> models = mapper.readValue(CATEGORY_TMP_PATH.toFile(), new TypeReference<List<CategoryModel>>() {
+        });
+
+        List<CategoryModel> updated = models.stream().map(m -> {
+            if (Objects.equals(m.id(), category.getId())) {
+                return m.update(category);
+            }
+            return m;
+        }).toList();
+
+        mapper.writeValue(CATEGORY_TMP_PATH.toFile(), updated);
+    }
+
+    @Override
+    public String delete(Long categoryId) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+        Objects.requireNonNull(categoryId);
+
+        List<CategoryModel> categoryModels = mapper.readValue(CATEGORY_TMP_PATH.toFile(), new TypeReference<List<CategoryModel>>() {
+        });
+        CategoryModel target = categoryModels.stream().filter(m -> Objects.equals(m.id(), categoryId)).findAny().orElseThrow();
+        List<CategoryModel> deleted = categoryModels.stream().filter(m -> !Objects.equals(m.id(), categoryId)).toList();
+
+        mapper.writeValue(CATEGORY_TMP_PATH.toFile(), deleted);
+        return target.fileName();
     }
 
     @Override

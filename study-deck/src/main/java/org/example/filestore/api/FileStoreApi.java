@@ -48,4 +48,24 @@ public class FileStoreApi {
             throw new RuntimeException(e);
         }
     }
+
+    public void changeCurrentCategory(long categoryId) {
+        try {
+            metaDataManager.transaction();
+            metaDataManager.selectCategory(categoryId);
+            metaDataManager.commit();
+        } catch (IOException e) {
+            metaDataManager.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Long currentSubCat() {
+        // TODO 현재 서브카테고리 id 가져오는 로직
+        return null;
+    }
+
+    public void changeCurrentSubCategory(long subCategoryId) {
+        // TODO 현재 서브카테고리를 변경하는 로직
+    }
 }

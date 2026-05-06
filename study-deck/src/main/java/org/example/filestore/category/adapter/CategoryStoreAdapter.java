@@ -1,9 +1,9 @@
 package org.example.filestore.category.adapter;
 
-import org.example.core.category.domain.Category;
-import org.example.core.category.port.out.CategoryStore;
+import org.example.core.domain.category.Category;
+import org.example.core.domain.category.CategoryStore;
 import org.example.filestore.category.manager.CategoryManager;
-import org.example.filestore.category.mapper.ModelToDomainMapper;
+import org.example.filestore.shared.ModelToDomainMapper;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
 import org.example.filestore.category.model.CategoryModel;
@@ -16,9 +16,9 @@ public class CategoryStoreAdapter implements CategoryStore {
     private final FileSystemManager fileSystemManager;
     private final CategoryManager categoryManager;
     private final MetaDataManager metaDataManager;
-    private final ModelToDomainMapper modelToDomainMapper;
+    private final ModelToDomainMapper<Category, CategoryModel> modelToDomainMapper;
 
-    public CategoryStoreAdapter(FileSystemManager fileSystemManager, CategoryManager categoryManager, MetaDataManager metaDataManager, ModelToDomainMapper modelToDomainMapper) {
+    public CategoryStoreAdapter(FileSystemManager fileSystemManager, CategoryManager categoryManager, MetaDataManager metaDataManager, ModelToDomainMapper<Category, CategoryModel> modelToDomainMapper) {
         this.fileSystemManager = fileSystemManager;
         this.categoryManager = categoryManager;
         this.metaDataManager = metaDataManager;
@@ -49,13 +49,12 @@ public class CategoryStoreAdapter implements CategoryStore {
                     );
 
             categoryManager.save(categoryModel);
-            metaDataManager.selectCategory(category.getId());
 
             fileSystemManager.commit();
             categoryManager.commit();
             metaDataManager.commit();
             return category;
-        } catch (IOException e) {
+        } catch (Exception e) {
             fileSystemManager.rollback();
             categoryManager.rollback();
             metaDataManager.rollback();
@@ -90,6 +89,40 @@ public class CategoryStoreAdapter implements CategoryStore {
             return categoryManager.findByOwnerId(ownerId, 0, 100).stream()
                     .map(CategoryModel::sortKey).toList();
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void update(Category category) {
+        categoryManager.transaction();
+        try {
+            categoryManager.update(category);
+            categoryManager.commit();
+        } catch (Exception e) {
+            categoryManager.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void delete(Long categoryId) {
+        metaDataManager.transaction();
+        categoryManager.transaction();
+        fileSystemManager.transaction();
+
+        try {
+            metaDataManager.ifCurrentCategoryReset(categoryId);
+            String filename = categoryManager.delete(categoryId);
+            fileSystemManager.deleteCategory(filename);
+
+            metaDataManager.commit();
+            categoryManager.commit();
+            fileSystemManager.commit();
+        } catch (Exception e) {
+            metaDataManager.rollback();
+            categoryManager.rollback();
+            fileSystemManager.rollback();
             throw new RuntimeException(e);
         }
     }

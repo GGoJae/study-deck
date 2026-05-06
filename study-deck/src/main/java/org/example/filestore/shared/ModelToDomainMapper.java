@@ -1,12 +1,12 @@
-package org.example.filestore.category.mapper;
+package org.example.filestore.shared;
 
 import org.example.core.domain.category.Category;
 import org.example.filestore.category.model.CategoryModel;
 
 import java.util.List;
 
-public interface ModelToDomainMapper {
-    Category toDomain(CategoryModel model);
+public interface  ModelToDomainMapper<D, M> {
+    D toDomain(M model);
 
-    List<Category> toDomain(List<CategoryModel> models);
+    List<D> toDomain(List<M> models);
 }

@@ -21,14 +21,6 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     private final ObjectMapper mapper = JsonMapper.getInstance();
 
     @Override
-    public Focus getFocus() throws IOException {
-        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
-
-        return metaData.focus();
-    }
-
-    @Override
     public Long nextCategoryId() throws IOException {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
         MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
@@ -52,6 +44,14 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     public Long currentCategory() throws IOException {
         MetaDataModel metaData = mapper.readValue(META_DATA_WORK_PATH.toFile(), new TypeReference<MetaDataModel>() {});
         return metaData.focus().categoryId();
+    }
+
+    @Override
+    public void ifCurrentCategoryReset(Long categoryId) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+        MetaDataModel updated = metaData.ifIsCurrentCategoryReset(categoryId);
+        mapper.writeValue(META_DATA_TMP_PATH.toFile(), updated);
     }
 
     @Override

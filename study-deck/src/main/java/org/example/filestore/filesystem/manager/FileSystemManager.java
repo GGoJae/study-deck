@@ -7,4 +7,6 @@ import java.io.IOException;
 
 public interface FileSystemManager extends Transactionable, FileManager {
     String createCategoryFile() throws IOException;
+
+    void deleteCategory(String filename) throws IOException;
 }

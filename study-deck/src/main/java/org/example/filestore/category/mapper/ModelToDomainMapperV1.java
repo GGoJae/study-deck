@@ -1,11 +1,12 @@
 package org.example.filestore.category.mapper;
 
-import org.example.core.category.domain.Category;
+import org.example.core.domain.category.Category;
 import org.example.filestore.category.model.CategoryModel;
+import org.example.filestore.shared.ModelToDomainMapper;
 
 import java.util.List;
 
-public class ModelToDomainMapperV1 implements ModelToDomainMapper{
+public class ModelToDomainMapperV1 implements ModelToDomainMapper<Category, CategoryModel> {
     @Override
     public Category toDomain(CategoryModel model) {
         return new Category(
