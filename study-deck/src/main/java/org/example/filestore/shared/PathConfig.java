@@ -17,5 +17,8 @@ public class PathConfig {
     public static final Path CATEGORY_WORK_PATH = Path.of(WORKING_DIR.toString(), "category.json");
     public static final Path CATEGORY_TMP_PATH = Path.of(WORKING_DIR.toString(), "category.tmp");
 
+    // subCategory manager path
+    public static final Path SUBCATEGORY_WORK_PATH = Path.of(WORKING_DIR.toString(), "subcategory.json");
+    public static final Path SUBCATEGORY_TMP_PATH = Path.of(WORKING_DIR.toString(), "subcategory.tmp");
 
 }

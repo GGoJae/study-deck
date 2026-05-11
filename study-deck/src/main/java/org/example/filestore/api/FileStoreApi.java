@@ -1,22 +1,27 @@
 package org.example.filestore.api;
 
-import org.example.filestore.data.category.manager.CategoryManager;
+import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
+import org.example.filestore.subcategory.manager.SubCategoryManager;
+import org.example.filestore.subcategory.model.SubCategoryModel;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Objects;
 
 import static org.example.filestore.shared.PathConfig.WORKING_DIR;
 
 public class FileStoreApi {
 
     private final CategoryManager categoryManager;
+    private final SubCategoryManager subCategoryManager;
     private final FileSystemManager fileSystemManager;
     private final MetaDataManager metaDataManager;
 
-    public FileStoreApi(CategoryManager categoryManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager) {
+    public FileStoreApi(CategoryManager categoryManager, SubCategoryManager subCategoryManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager) {
         this.categoryManager = categoryManager;
+        this.subCategoryManager = subCategoryManager;
         this.fileSystemManager = fileSystemManager;
         this.metaDataManager = metaDataManager;
     }
@@ -33,10 +38,57 @@ public class FileStoreApi {
             Files.createDirectory(WORKING_DIR);
             metaDataManager.init();
             categoryManager.init();
+            subCategoryManager.init();
             fileSystemManager.init();
             System.out.println("FileStore 생성이 완료됐습니다.");
         } catch (IOException e) {
             System.out.println("FileStore 생성에 실패했습니다.");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Long currentCategory() {
+        try {
+            return metaDataManager.currentCategory();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void changeCurrentCategory(long categoryId) {
+        try {
+            metaDataManager.transaction();
+            metaDataManager.selectCategory(categoryId);
+            metaDataManager.commit();
+        } catch (IOException e) {
+            metaDataManager.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Long currentSubCategory() {
+        try {
+            return metaDataManager.currentSubCategory();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void changeCurrentSubCategory(long subCategoryId) {
+        try {
+            metaDataManager.transaction();
+
+            SubCategoryModel subCategory = subCategoryManager.findById(subCategoryId).orElseThrow();
+            Long currentCategory = metaDataManager.currentCategory();
+            if (!Objects.equals(subCategory.parentCategoryId(), currentCategory)) {
+                throw new IllegalStateException();
+            }
+
+            metaDataManager.selectSubCategory(subCategoryId);
+
+            metaDataManager.commit();
+        } catch (IOException e) {
+            metaDataManager.rollback();
             throw new RuntimeException(e);
         }
     }

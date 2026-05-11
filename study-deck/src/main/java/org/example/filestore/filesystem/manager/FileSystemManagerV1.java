@@ -1,5 +1,6 @@
 package org.example.filestore.filesystem.manager;
 
+import org.apache.commons.io.FileUtils;
 import org.example.filestore.data.DataManager;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.naming.FileNameGenerator;
@@ -9,6 +10,9 @@ import org.example.filestore.shared.model.Focus;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 import static org.example.filestore.shared.Constant.*;
 import static org.example.filestore.shared.PathConfig.FILE_SYSTEM_TMP_PATH;
@@ -31,26 +35,53 @@ public class FileSystemManagerV1 implements FileSystemManager {
 
     @Override
     public String createCategoryFile() throws IOException {
-        String fileName = fileNameGenerator.getFileName();
+        String filename = fileNameGenerator.getFileName();
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
 
-        Path categoryDirPath = Path.of(FILE_SYSTEM_TMP_PATH.toString(), fileName);
+        Path categoryDirPath = FILE_SYSTEM_TMP_PATH.resolve(filename);
         Files.createDirectory(categoryDirPath);
 
-        return fileName;
+        return filename;
+    }
+
+    @Override
+    public void deleteCategory(String filename) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        Path target = FILE_SYSTEM_TMP_PATH.resolve(filename);
+        FileUtils.deleteDirectory(target.toFile());
+    }
+
+    @Override
+    public String createSubCategory(String categoryFilename) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        String filename = fileNameGenerator.getFileName();
+
+        Path subCategoryDirPath = FILE_SYSTEM_TMP_PATH.resolve(categoryFilename).resolve(filename);
+        Files.createDirectory(subCategoryDirPath);
+
+        return filename;
+    }
+
+    @Override
+    public void deleteSubCategory(String categoryFilename, String subCategoryFilename) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        Path target = FILE_SYSTEM_TMP_PATH.resolve(categoryFilename).resolve(subCategoryFilename);
+        FileUtils.deleteDirectory(target.toFile());
     }
 
     @Override
     public void transaction() {
         if (isTransactionOn()) throw new IllegalStateException(ALREADY_STARTED_TRANSACTION);
-
         try {
-            Files.createDirectory(FILE_SYSTEM_TMP_PATH);
+            FileUtils.copyDirectory(FILE_SYSTEM_WORK_PATH.toFile(), FILE_SYSTEM_TMP_PATH.toFile());
         } catch (IOException e) {
+            System.out.println(TRANSACTION_FAILED);
             try {
-                Files.deleteIfExists(FILE_SYSTEM_TMP_PATH);
+                FileUtils.deleteDirectory(FILE_SYSTEM_TMP_PATH.toFile());
             } catch (IOException ex) {
-                System.out.println(TRANSACTION_FAILED);
                 throw new RuntimeException(ex);
             }
             throw new RuntimeException(e);
@@ -60,13 +91,15 @@ public class FileSystemManagerV1 implements FileSystemManager {
     @Override
     public void commit() {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-
+        Path backupPath = FILE_SYSTEM_WORK_PATH.resolveSibling("work_bak");
         try {
-            Focus focus = metaDataManager.getFocus();
-            String filename = dataManager.getFileName(focus);
-            Path target = pathCalculator.getPath(focus);
+            if (Files.exists(FILE_SYSTEM_WORK_PATH)) {
+                Files.move(FILE_SYSTEM_WORK_PATH, backupPath, StandardCopyOption.REPLACE_EXISTING);
+            }
 
-            Files.move(Path.of(FILE_SYSTEM_TMP_PATH.toString(), filename), target);
+            Files.move(FILE_SYSTEM_TMP_PATH, FILE_SYSTEM_WORK_PATH, StandardCopyOption.ATOMIC_MOVE);
+
+            FileUtils.deleteQuietly(backupPath.toFile());
         } catch (IOException e) {
             System.out.println(COMMIT_FAILED);
             throw new RuntimeException(e);
@@ -78,11 +111,7 @@ public class FileSystemManagerV1 implements FileSystemManager {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
 
         try {
-            // 내부에 파일이 있으면 DirectoryNotEmptyException 터지는데 이거 어떻게 해결할건지 생각해보기
-            Focus focus = metaDataManager.getFocus();
-            String fileName = dataManager.getFileName(focus);
-            Files.delete(FILE_SYSTEM_TMP_PATH.resolve(fileName));
-            Files.delete(FILE_SYSTEM_TMP_PATH);
+            FileUtils.deleteDirectory(FILE_SYSTEM_TMP_PATH.toFile());
         } catch (IOException e) {
             System.out.println(ROLLBACK_FAILED);
             throw new RuntimeException(e);

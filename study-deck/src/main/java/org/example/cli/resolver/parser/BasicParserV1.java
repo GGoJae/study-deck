@@ -8,6 +8,7 @@ import org.example.cli.resolver.validator.CommandValidator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class BasicParserV1 implements CommandParser{
 
@@ -20,6 +21,9 @@ public class BasicParserV1 implements CommandParser{
     @Override
     public Command parse(String[] args) {
         try {
+            if (Objects.isNull(args) || Objects.equals(args.length, 0)) {
+                throw new IllegalArgumentException("명령어가 입력되지 않았습니다.");
+            }
             String cmd = args[0];
 
             List<String> cmdArgs = new ArrayList<>();
@@ -30,7 +34,7 @@ public class BasicParserV1 implements CommandParser{
 
                 int optionIdx = -1;
                 for (int i = 0; i < optionsAndArguments.length; i++) {
-                    if (optionsAndArguments[i].startsWith("-")) {
+                    if (OptionFormat.isRightValueFormat(optionsAndArguments[i])) {
                         optionIdx = i;
                         break;
                     }
@@ -40,13 +44,13 @@ public class BasicParserV1 implements CommandParser{
                     cmdArgs = List.of(optionsAndArguments);
                     optionsAndArguments = new String[0];
                 } else if (optionIdx > 0){
-                    cmdArgs = List.of(Arrays.copyOfRange(optionsAndArguments, 0, optionIdx - 1));
+                    cmdArgs = List.of(Arrays.copyOfRange(optionsAndArguments, 0, optionIdx));
                     optionsAndArguments = Arrays.copyOfRange(optionsAndArguments, optionIdx, optionsAndArguments.length);
                 }
 
                 Option.OptionBuilder optionBuilder = new Option.OptionBuilder();
                 for (String oa : optionsAndArguments) {
-                    if (OptionFormat.isOptionFormat(oa)) {
+                    if (OptionFormat.isRightValueFormat(oa)) {
                         if (optionBuilder.hasValue()) {
                             Option option = optionBuilder.build();
                             options.add(option);
@@ -54,9 +58,7 @@ public class BasicParserV1 implements CommandParser{
                         }
                         optionBuilder.value(oa);
                     } else {
-                        Option option = optionBuilder.argument(oa).build();
-                        options.add(option);
-                        optionBuilder = new Option.OptionBuilder();
+                        optionBuilder.addArgument(oa);
                     }
                 }
                 if (optionBuilder.hasValue()) {
