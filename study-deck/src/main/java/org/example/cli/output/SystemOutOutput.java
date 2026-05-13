@@ -1,5 +1,6 @@
 package org.example.cli.output;
 
+import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.category.dto.response.CategoryCapture;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
 
@@ -33,5 +34,10 @@ public class SystemOutOutput implements Output{
                     return "[" + c.id() + "] " + c.name();
                 })
                 .forEach(System.out::println);
+    }
+
+    @Override
+    public void showCards(List<CardCapture> cards) {
+        // TODO 카드 보여주기
     }
 }
