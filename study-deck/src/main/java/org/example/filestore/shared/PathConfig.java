@@ -21,4 +21,7 @@ public class PathConfig {
     public static final Path SUBCATEGORY_WORK_PATH = Path.of(WORKING_DIR.toString(), "subcategory.json");
     public static final Path SUBCATEGORY_TMP_PATH = Path.of(WORKING_DIR.toString(), "subcategory.tmp");
 
+    // card manager working file name
+    public static final String CARD_WORK_NAME = "card.json";
+    public static final String CARD_TMP_NAME = "card.tmp";
 }

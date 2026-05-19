@@ -3,6 +3,7 @@ package org.example.filestore.subcategory.adapter;
 import org.example.core.domain.subcategory.SubCategory;
 import org.example.core.domain.subcategory.SubCategoryStore;
 import org.example.filestore.category.manager.CategoryManager;
+import org.example.filestore.category.model.CategoryModel;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
 import org.example.filestore.shared.ModelToDomainMapper;
@@ -60,7 +61,7 @@ public class SubCategoryStoreAdapter implements SubCategoryStore {
 
             Long nextId = metaDataManager.nextSubCategoryId();
             SubCategory withId = subCategory.withId(nextId);
-            String categoryFilename = categoryManager.getFilename(subCategory.getParentCategoryId());
+            String categoryFilename = categoryManager.findById(subCategory.getParentCategoryId()).map(CategoryModel::fileName).orElseThrow();
             String filename = fileSystemManager.createSubCategory(categoryFilename);
             SubCategoryModel model = SubCategoryModel.of(withId, filename);
             subCategoryManager.save(model);
@@ -90,7 +91,7 @@ public class SubCategoryStoreAdapter implements SubCategoryStore {
 
             metaDataManager.ifCurrentSubCategoryReset(subCategoryId);
             SubCategoryModel target = subCategoryManager.delete(subCategoryId);
-            String categoryFilename = categoryManager.getFilename(target.parentCategoryId());
+            String categoryFilename = categoryManager.findById(target.parentCategoryId()).map(CategoryModel::fileName).orElseThrow();
             String subCategoryFilename = target.filename();
             fileSystemManager.deleteSubCategory(categoryFilename, subCategoryFilename);
 

@@ -4,6 +4,7 @@ import org.example.filestore.shared.FileManager;
 import org.example.filestore.shared.Transactionable;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public interface MetaDataManager extends Transactionable, FileManager {
 
@@ -22,4 +23,6 @@ public interface MetaDataManager extends Transactionable, FileManager {
     void ifCurrentSubCategoryReset(Long subCategoryId) throws IOException;
 
     Long nextSubCategoryId() throws IOException;
+
+    Long nextCardId() throws IOException;
 }

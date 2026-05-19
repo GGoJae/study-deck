@@ -20,4 +20,12 @@ public record Counters(
                 this.nextCardId
         );
     }
+
+    public Counters increaseCardId() {
+        return new Counters(
+                this.nextCategoryId,
+                this.nextSubCategoryId,
+                this.nextCardId + 1
+        );
+    }
 }

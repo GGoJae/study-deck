@@ -35,15 +35,6 @@ public class CategoryManagerV1 implements CategoryManager{
     }
 
     @Override
-    public String getFilename(Long categoryId) throws IOException {
-        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-
-        List<CategoryModel> models = mapper.readValue(CATEGORY_TMP_PATH.toFile(), new TypeReference<>() {});
-
-        return models.stream().filter(c -> c.id().equals(categoryId)).map(CategoryModel::fileName).findAny().orElse(null);
-    }
-
-    @Override
     public Optional<CategoryModel> findById(Long categoryId) throws IOException {
         return mapper.readValue(CATEGORY_WORK_PATH.toFile(), new TypeReference<List<CategoryModel>>() {})
                 .stream()

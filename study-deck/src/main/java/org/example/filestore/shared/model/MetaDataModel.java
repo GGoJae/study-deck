@@ -55,4 +55,8 @@ public record MetaDataModel(
     public Long selectedSubCategoryId() {
         return this.focus.subCategoryId();
     }
+
+    public MetaDataModel increaseNextCardId() {
+        return new MetaDataModel(this.focus, this.counters.increaseCardId());
+    }
 }

@@ -2,13 +2,16 @@ package org.example.filestore.data.meta.manager;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.common.JsonMapper;
 import org.example.filestore.shared.model.Counters;
 import org.example.filestore.shared.model.Focus;
 import org.example.filestore.shared.model.MetaDataModel;
+import org.example.filestore.subcategory.manager.SubCategoryManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -37,6 +40,16 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
         MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
 
         MetaDataModel afterIncrease = metaData.increaseNextSubCategoryId();
+        mapper.writeValue(META_DATA_TMP_PATH.toFile(), afterIncrease);
+        return afterIncrease.nextSubCategoryId();
+    }
+
+    @Override
+    public Long nextCardId() throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+
+        MetaDataModel afterIncrease = metaData.increaseNextCardId();
         mapper.writeValue(META_DATA_TMP_PATH.toFile(), afterIncrease);
         return afterIncrease.nextSubCategoryId();
     }
