@@ -103,12 +103,13 @@ public class CatCmdExecutor implements CommandExecutor{
             return;
         }
         String categoryName = arguments.stream().findAny().orElseThrow();
-        categoryCommandPort.create(new CreateCategoryRequest(requesterId, categoryName, null));
+        Long id = categoryCommandPort.create(new CreateCategoryRequest(requesterId, categoryName, null));
+        fileStoreApi.changeCurrentCategory(id);
     }
 
     private void showCategoryList(Long requesterId) {
         List<CategoryCapture> ownCategories = categoryQueryPort.getOwnCategoriesForDisplay(new CategoryQuery(requesterId, 0, 100));
-        Long currentCategoryId = fileStoreApi.currentCategory();
+        Long currentCategoryId = fileStoreApi.currentCategory().orElse(null);
         output.categoriesAndCurrentCategory(ownCategories, currentCategoryId);
     }
 }
