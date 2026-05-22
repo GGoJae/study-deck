@@ -7,6 +7,7 @@ import java.util.List;
 
 public record CardModel(
     Long id,
+    Long ownerId,
     Long subCategoryId,
     String displayName,
     String question,
@@ -20,7 +21,7 @@ public record CardModel(
 ) {
     public static CardModel of(Card domain) {
         return new CardModel(
-                domain.getId(), domain.getSubCategoryId(), domain.getDisplayName(),
+                domain.getId(), domain.getOwnerId(), domain.getSubCategoryId(), domain.getDisplayName(),
                 domain.getQuestion(), domain.getBestAnswer(), List.of(),
                 domain.getCreatedAt(), domain.getUpdatedAt(),
                 domain.getCreatedUser(), domain.getUpdatedUser()

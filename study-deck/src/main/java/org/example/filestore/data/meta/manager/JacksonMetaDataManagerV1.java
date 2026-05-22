@@ -2,16 +2,16 @@ package org.example.filestore.data.meta.manager;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.common.JsonMapper;
 import org.example.filestore.shared.model.Counters;
 import org.example.filestore.shared.model.Focus;
 import org.example.filestore.shared.model.MetaDataModel;
-import org.example.filestore.subcategory.manager.SubCategoryManager;
+import org.example.filestore.shared.model.Type;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
 
 import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -26,7 +26,7 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     @Override
     public Long nextCategoryId() throws IOException {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+        MetaDataModel metaData = getMetaDataAtTmp();
 
         MetaDataModel newMetaData = metaData.increaseNextCategoryId();
         mapper.writeValue(META_DATA_TMP_PATH.toFile(), newMetaData);
@@ -37,7 +37,7 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     @Override
     public Long nextSubCategoryId() throws IOException {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+        MetaDataModel metaData = getMetaDataAtTmp();
 
         MetaDataModel afterIncrease = metaData.increaseNextSubCategoryId();
         mapper.writeValue(META_DATA_TMP_PATH.toFile(), afterIncrease);
@@ -47,11 +47,23 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     @Override
     public Long nextCardId() throws IOException {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+        MetaDataModel metaData = getMetaDataAtTmp();
 
         MetaDataModel afterIncrease = metaData.increaseNextCardId();
         mapper.writeValue(META_DATA_TMP_PATH.toFile(), afterIncrease);
-        return afterIncrease.nextSubCategoryId();
+        return afterIncrease.nextCardId();
+    }
+
+    @Override
+    public boolean isCurrentContentCard() throws IOException {
+        MetaDataModel metaData = getMetaDataAtWork();
+        return Objects.equals(metaData.focus().targetType(), Type.CARD);
+    }
+
+    @Override
+    public Optional<Long> contentId() throws IOException {
+        MetaDataModel metaData = getMetaDataAtWork();
+        return Optional.ofNullable(metaData.focus().targetId());
     }
 
     @Override
@@ -71,22 +83,29 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     }
 
     @Override
-    public Long currentCategory() throws IOException {
-        MetaDataModel metaData = mapper.readValue(META_DATA_WORK_PATH.toFile(), new TypeReference<MetaDataModel>() {});
-        return metaData.selectedCategoryId();
+    public void selectCard(Long cardId) throws IOException {
+        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<>(){});
+        MetaDataModel newMetaData = metaData.changeContent(Type.CARD, cardId);
+
+        mapper.writeValue(META_DATA_TMP_PATH.toFile(), newMetaData);
     }
 
     @Override
-    public Long currentSubCategory() throws IOException {
-        MetaDataModel metaData = mapper.readValue(META_DATA_WORK_PATH.toFile(), new TypeReference<MetaDataModel>() {
-        });
-        return metaData.selectedSubCategoryId();
+    public Optional<Long> currentCategory() throws IOException {
+        MetaDataModel metaData = getMetaDataAtWork();
+        return Optional.ofNullable(metaData.selectedCategoryId());
+    }
+
+    @Override
+    public Optional<Long> currentSubCategory() throws IOException {
+        MetaDataModel metaData = getMetaDataAtWork();
+        return Optional.ofNullable(metaData.selectedSubCategoryId());
     }
 
     @Override
     public void ifCurrentCategoryReset(Long categoryId) throws IOException {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+        MetaDataModel metaData = getMetaDataAtTmp();
         MetaDataModel updated = metaData.ifIsCurrentCategoryReset(categoryId);
         mapper.writeValue(META_DATA_TMP_PATH.toFile(), updated);
     }
@@ -94,7 +113,7 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     @Override
     public void ifCurrentSubCategoryReset(Long subCategoryId) throws IOException {
         if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
-        MetaDataModel metaData = mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+        MetaDataModel metaData = getMetaDataAtTmp();
         MetaDataModel updated = metaData.ifIsCurrentSubCategoryReset(subCategoryId);
         mapper.writeValue(META_DATA_TMP_PATH.toFile(), updated);
     }
@@ -148,5 +167,14 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
         Files.createFile(META_DATA_WORK_PATH);
         MetaDataModel metaData = new MetaDataModel(Focus.empty(), new Counters(0, 0, 0));
         mapper.writeValue(META_DATA_WORK_PATH.toFile(), metaData);
+    }
+
+    private MetaDataModel getMetaDataAtTmp() throws IOException {
+        return mapper.readValue(META_DATA_TMP_PATH.toFile(), new TypeReference<MetaDataModel>() {});
+    }
+
+    private MetaDataModel getMetaDataAtWork() throws IOException {
+        return mapper.readValue(META_DATA_WORK_PATH.toFile(), new TypeReference<MetaDataModel>() {
+        });
     }
 }

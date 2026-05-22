@@ -13,5 +13,5 @@ public interface Output {
 
     void subAndCurrentSub(List<SubCategoryCapture> subCategories, Long focusSubCatId);
 
-    void showCards(List<CardCapture> cards);
+    void showCards(List<CardCapture> cards, Long focusCardId);
 }

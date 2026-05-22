@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -31,9 +33,27 @@ public class CardManagerV1 implements CardManager {
         Path currentPath = fileSystemManager.currentPath();
         if (isTransactionOff(currentPath)) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
 
-        List<CardModel> cardModels = mapper.readValue(currentPath.resolve(CARD_TMP_NAME).toFile(), new TypeReference<List<CardModel>>() {});
+        List<CardModel> cardModels = getCardsAtTmp(currentPath);
         cardModels.add(jsonModel);
         mapper.writeValue(currentPath.resolve(CARD_TMP_NAME).toFile(), cardModels);
+    }
+
+    @Override
+    public Optional<CardModel> findById(Long cardId) throws IOException {
+        Path currentPath = fileSystemManager.currentPath();
+        List<CardModel> cardModels = getCardsAtWork(currentPath);
+        return cardModels.stream()
+                .filter(c -> Objects.equals(c.id(), cardId))
+                .findAny();
+    }
+
+    @Override
+    public List<CardModel> findBySubCategoryId(Long subCategoryId) throws IOException {
+        Path currentPath = fileSystemManager.currentPath();
+        List<CardModel> cardModels = getCardsAtWork(currentPath);
+        return cardModels.stream()
+                .filter(c -> Objects.equals(c.subCategoryId(), subCategoryId))
+                .toList();
     }
 
     @Override
@@ -90,5 +110,15 @@ public class CardManagerV1 implements CardManager {
 
     private boolean notInit(Path currentPath) {
         return Files.notExists(currentPath.resolve(CARD_WORK_NAME));
+    }
+
+    private List<CardModel> getCardsAtTmp(Path currentPath) throws IOException {
+        return mapper.readValue(currentPath.resolve(CARD_TMP_NAME).toFile(), new TypeReference<List<CardModel>>() {
+        });
+    }
+
+    private List<CardModel> getCardsAtWork(Path currentPath) throws IOException {
+        return mapper.readValue(currentPath.resolve(CARD_WORK_NAME).toFile(), new TypeReference<List<CardModel>>() {
+        });
     }
 }

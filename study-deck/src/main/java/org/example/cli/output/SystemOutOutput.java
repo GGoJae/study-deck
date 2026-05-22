@@ -5,13 +5,14 @@ import org.example.core.application.category.dto.response.CategoryCapture;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
 
 import java.util.List;
+import java.util.Objects;
 
 public class SystemOutOutput implements Output{
     @Override
     public void categoriesAndCurrentCategory(List<CategoryCapture> categories, Long focusCategoryId) {
         categories.stream()
                 .map(c -> {
-                    if (c.id().equals(focusCategoryId)) {
+                    if (Objects.equals(c.id(), focusCategoryId)) {
                         return ConsoleColor.GREEN + "[" + c.id() + "] " + c.name() + ConsoleColor.RESET;
                     }
                     return "[" + c.id() + "] " + c.name();
@@ -28,7 +29,7 @@ public class SystemOutOutput implements Output{
     public void subAndCurrentSub(List<SubCategoryCapture> subCategories, Long focusSubCatId) {
         subCategories.stream()
                 .map(c -> {
-                    if (c.id().equals(focusSubCatId)) {
+                    if (Objects.equals(c.id(), focusSubCatId)) {
                         return ConsoleColor.GREEN + "[" + c.id() + "] " + c.name() + ConsoleColor.RESET;
                     }
                     return "[" + c.id() + "] " + c.name();
@@ -37,7 +38,14 @@ public class SystemOutOutput implements Output{
     }
 
     @Override
-    public void showCards(List<CardCapture> cards) {
-        // TODO 카드 보여주기
+    public void showCards(List<CardCapture> cards, Long focusCardId) {
+        cards.stream()
+                .map(c -> {
+                    if (Objects.equals(c.id(), focusCardId)) {
+                        return ConsoleColor.GREEN + "[" + c.id() + "] " + c.displayName() + ConsoleColor.RESET;
+                    }
+                    return "[" + c.id() + "] " + c.displayName();
+                })
+                .forEach(System.out::println);
     }
 }

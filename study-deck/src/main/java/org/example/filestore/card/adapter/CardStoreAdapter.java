@@ -6,19 +6,24 @@ import org.example.filestore.card.manager.CardManager;
 import org.example.filestore.card.model.CardModel;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
+import org.example.filestore.shared.ModelToDomainMapper;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
 
 public class CardStoreAdapter implements CardStore {
 
     private final CardManager cardManager;
     private final FileSystemManager fileSystemManager;
     private final MetaDataManager metaDataManager;
+    private final ModelToDomainMapper<Card, CardModel> mapper;
 
-    public CardStoreAdapter(CardManager cardManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager) {
+    public CardStoreAdapter(CardManager cardManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager, ModelToDomainMapper<Card, CardModel> mapper) {
         this.cardManager = cardManager;
         this.fileSystemManager = fileSystemManager;
         this.metaDataManager = metaDataManager;
+        this.mapper = mapper;
     }
 
     @Override
@@ -43,6 +48,20 @@ public class CardStoreAdapter implements CardStore {
             cardManager.rollback();
             metaDataManager.rollback();
             fileSystemManager.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<Card> findBySubCategoryId(Long requesterId, Long subCategoryId) {
+        try {
+            return cardManager.findBySubCategoryId(subCategoryId)
+                    .stream()
+                    .filter(c -> Objects.equals(c.ownerId(), requesterId))
+                    .map(mapper::toDomain)
+                    .toList();
+
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

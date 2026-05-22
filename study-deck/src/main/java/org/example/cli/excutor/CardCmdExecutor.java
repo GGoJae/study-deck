@@ -43,7 +43,7 @@ public class CardCmdExecutor implements CommandExecutor{
         }
 
         Long requesterId = requesterInfo.id();
-        Long currentSubCategory = fileStoreApi.currentSubCategory();
+        Long currentSubCategory = fileStoreApi.currentSubCategory().orElse(null);
 
         if (!command.hasArgument() && !command.hasOptions()) {
             showCards(requesterId, currentSubCategory);
@@ -74,12 +74,15 @@ public class CardCmdExecutor implements CommandExecutor{
         if (!option.hasArgument()) {
             output.errorMessage("card 생성시 question 은 필수입니다.");
         }
-        commandUseCase.create(new CreateCard(requesterId, currentSubCategory, displayName, option.arguments().get(0)));
+        Long cardId = commandUseCase.create(new CreateCard(requesterId, currentSubCategory, displayName, option.arguments().get(0)));
+        fileStoreApi.selectCard(cardId);
     }
 
     private void showCards(Long requesterId, Long currentSubCategory) {
         List<CardCapture> cards = queryUseCase.getOwnCardsForDisplay(requesterId, currentSubCategory);
-        output.showCards(cards);
+        Long currentCard = fileStoreApi.currentCard().orElse(null);
+
+        output.showCards(cards, currentCard);
     }
 
 }

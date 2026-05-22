@@ -8,6 +8,8 @@ public record CategoryCapture(
         String name,
         int sortKey,
         Instant createdAt,
-        boolean isModified
+        Instant updatedAt,
+        Long createdUser,
+        Long updatedUser
 ) {
 }

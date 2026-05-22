@@ -14,8 +14,20 @@ public record MetaDataModel(
         return new MetaDataModel(this.focus.changeSubCategoryFocus(subCategoryId), this.counters);
     }
 
+    public MetaDataModel changeContent(Type type, Long cardId) {
+        return new MetaDataModel(this.focus.changeContent(type, cardId), this.counters);
+    }
+
     public MetaDataModel increaseNextCategoryId() {
         return new MetaDataModel(this.focus, this.counters.increaseCategoryId());
+    }
+
+    public MetaDataModel increaseNextSubCategoryId() {
+        return new MetaDataModel(this.focus, this.counters.increaseSubCategoryId());
+    }
+
+    public MetaDataModel increaseNextCardId() {
+        return new MetaDataModel(this.focus, this.counters.increaseCardId());
     }
 
     public MetaDataModel ifIsCurrentCategoryReset(Long categoryId) {
@@ -44,8 +56,8 @@ public record MetaDataModel(
         return this.counters.nextSubCategoryId();
     }
 
-    public MetaDataModel increaseNextSubCategoryId() {
-        return new MetaDataModel(this.focus, this.counters.increaseSubCategoryId());
+    public Long nextCardId() {
+        return this.counters.nextCardId();
     }
 
     public Long selectedCategoryId() {
@@ -54,9 +66,5 @@ public record MetaDataModel(
 
     public Long selectedSubCategoryId() {
         return this.focus.subCategoryId();
-    }
-
-    public MetaDataModel increaseNextCardId() {
-        return new MetaDataModel(this.focus, this.counters.increaseCardId());
     }
 }

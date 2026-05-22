@@ -41,4 +41,8 @@ public record Focus(
 
         return new Focus(this.categoryId, subCategoryId, null, null);
     }
+
+    public Focus changeContent(Type type, Long contentId) {
+        return new Focus(this.categoryId, this.subCategoryId, type, contentId);
+    }
 }

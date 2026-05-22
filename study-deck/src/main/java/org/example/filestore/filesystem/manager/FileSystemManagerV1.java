@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.example.filestore.shared.Constant.*;
 import static org.example.filestore.shared.PathConfig.FILE_SYSTEM_TMP_PATH;
@@ -73,29 +74,29 @@ public class FileSystemManagerV1 implements FileSystemManager {
 
     @Override
     public Path currentPath() throws IOException {
-        Long currentCategory = metaDataManager.currentCategory();
-        Long currentSubCategory = metaDataManager.currentSubCategory();
+        Optional<Long> currentCategory = metaDataManager.currentCategory();
+        Optional<Long> currentSubCategory = metaDataManager.currentSubCategory();
 
         if (isTransactionOn()) {
-            if (Objects.isNull(currentCategory)) {
+            if (currentCategory.isEmpty()) {
                 return FILE_SYSTEM_TMP_PATH;
-            } else if (Objects.isNull(currentSubCategory)) {
-                String categoryFilename = categoryManager.findById(currentCategory).map(CategoryModel::fileName).orElseThrow();
+            } else if (currentSubCategory.isEmpty()) {
+                String categoryFilename = categoryManager.findById(currentCategory.orElseThrow()).map(CategoryModel::fileName).orElseThrow();
                 return FILE_SYSTEM_TMP_PATH.resolve(categoryFilename);
             } else {
-                String categoryFilename = categoryManager.findById(currentCategory).map(CategoryModel::fileName).orElseThrow();
-                String subCategoryFilename = subCategoryManager.findById(currentSubCategory).map(SubCategoryModel::filename).orElseThrow();
+                String categoryFilename = categoryManager.findById(currentCategory.orElseThrow()).map(CategoryModel::fileName).orElseThrow();
+                String subCategoryFilename = subCategoryManager.findById(currentSubCategory.orElseThrow()).map(SubCategoryModel::filename).orElseThrow();
                 return FILE_SYSTEM_TMP_PATH.resolve(categoryFilename).resolve(subCategoryFilename);
             }
         } else {
-            if (Objects.isNull(currentCategory)) {
+            if (currentCategory.isEmpty()) {
                 return FILE_SYSTEM_WORK_PATH;
-            } else if (Objects.isNull(currentSubCategory)) {
-                String categoryFilename = categoryManager.findById(currentCategory).map(CategoryModel::fileName).orElseThrow();
+            } else if (currentSubCategory.isEmpty()) {
+                String categoryFilename = categoryManager.findById(currentCategory.orElseThrow()).map(CategoryModel::fileName).orElseThrow();
                 return FILE_SYSTEM_WORK_PATH.resolve(categoryFilename);
             } else {
-                String categoryFilename = categoryManager.findById(currentCategory).map(CategoryModel::fileName).orElseThrow();
-                String subCategoryFilename = subCategoryManager.findById(currentSubCategory).map(SubCategoryModel::filename).orElseThrow();
+                String categoryFilename = categoryManager.findById(currentCategory.orElseThrow()).map(CategoryModel::fileName).orElseThrow();
+                String subCategoryFilename = subCategoryManager.findById(currentSubCategory.orElseThrow()).map(SubCategoryModel::filename).orElseThrow();
                 return FILE_SYSTEM_WORK_PATH.resolve(categoryFilename).resolve(subCategoryFilename);
             }
         }

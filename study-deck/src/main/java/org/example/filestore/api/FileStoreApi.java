@@ -1,5 +1,7 @@
 package org.example.filestore.api;
 
+import org.example.filestore.card.manager.CardManager;
+import org.example.filestore.card.model.CardModel;
 import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
@@ -9,6 +11,7 @@ import org.example.filestore.subcategory.model.SubCategoryModel;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.example.filestore.shared.PathConfig.WORKING_DIR;
 
@@ -16,12 +19,14 @@ public class FileStoreApi {
 
     private final CategoryManager categoryManager;
     private final SubCategoryManager subCategoryManager;
+    private final CardManager cardManager;
     private final FileSystemManager fileSystemManager;
     private final MetaDataManager metaDataManager;
 
-    public FileStoreApi(CategoryManager categoryManager, SubCategoryManager subCategoryManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager) {
+    public FileStoreApi(CategoryManager categoryManager, SubCategoryManager subCategoryManager, CardManager cardManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager) {
         this.categoryManager = categoryManager;
         this.subCategoryManager = subCategoryManager;
+        this.cardManager = cardManager;
         this.fileSystemManager = fileSystemManager;
         this.metaDataManager = metaDataManager;
     }
@@ -47,7 +52,7 @@ public class FileStoreApi {
         }
     }
 
-    public Long currentCategory() {
+    public Optional<Long> currentCategory() {
         try {
             return metaDataManager.currentCategory();
         } catch (IOException e) {
@@ -66,9 +71,20 @@ public class FileStoreApi {
         }
     }
 
-    public Long currentSubCategory() {
+    public Optional<Long> currentSubCategory() {
         try {
             return metaDataManager.currentSubCategory();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Optional<Long> currentCard() {
+        try {
+            if (!metaDataManager.isCurrentContentCard()) {
+                return Optional.empty();
+            }
+            return metaDataManager.contentId();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -79,12 +95,31 @@ public class FileStoreApi {
             metaDataManager.transaction();
 
             SubCategoryModel subCategory = subCategoryManager.findById(subCategoryId).orElseThrow();
-            Long currentCategory = metaDataManager.currentCategory();
+            Long currentCategory = metaDataManager.currentCategory().orElseThrow();
             if (!Objects.equals(subCategory.parentCategoryId(), currentCategory)) {
                 throw new IllegalStateException();
             }
 
             metaDataManager.selectSubCategory(subCategoryId);
+
+            metaDataManager.commit();
+        } catch (IOException e) {
+            metaDataManager.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void selectCard(long cardId) {
+        try {
+            metaDataManager.transaction();
+
+            CardModel cardModel = cardManager.findById(cardId).orElseThrow();
+            Long currentSubCategory = metaDataManager.currentSubCategory().orElseThrow();
+            if (!Objects.equals(currentSubCategory, cardModel.subCategoryId())) {
+                throw new IllegalStateException();
+            }
+
+            metaDataManager.selectCard(cardId);
 
             metaDataManager.commit();
         } catch (IOException e) {

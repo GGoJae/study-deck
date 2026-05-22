@@ -15,23 +15,27 @@ import org.example.cli.resolver.parser.BasicParserV1;
 import org.example.cli.resolver.parser.CommandParser;
 import org.example.cli.resolver.validator.CommandValidator;
 import org.example.cli.resolver.validator.CommandValidatorV1;
+import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.card.factory.CardFactory;
 import org.example.core.application.card.factory.CardFactoryV1;
+import org.example.core.application.card.mapper.CardToCaptureMapper;
 import org.example.core.application.card.service.CardCommandServiceV1;
 import org.example.core.application.card.service.CardQueryServiceV1;
 import org.example.core.application.card.usecase.CardCommandUseCase;
 import org.example.core.application.card.usecase.CardQueryUseCase;
+import org.example.core.application.category.dto.response.CategoryCapture;
 import org.example.core.application.category.factory.CategoryFactory;
 import org.example.core.application.category.factory.CategoryFactoryV1;
 import org.example.core.application.category.factory.sortcalcultor.CategorySortCalculator;
 import org.example.core.application.category.factory.sortcalcultor.CategorySortCalculatorV1;
 import org.example.core.application.category.mapper.CategoryToModelMapperV1;
-import org.example.core.application.category.mapper.DomainToModelMapper;
 import org.example.core.application.category.service.CategoryCommandServiceV1;
 import org.example.core.application.category.service.CategoryInternalQueryServiceV1;
 import org.example.core.application.category.service.CategoryQueryServiceV1;
 import org.example.core.application.category.usecase.CategoryCommandUseCase;
 import org.example.core.application.category.usecase.CategoryQueryUseCase;
+import org.example.core.application.mapper.ToResponseMapper;
+import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
 import org.example.core.application.subcategory.factory.SubCategoryFactory;
 import org.example.core.application.subcategory.factory.SubCategoryFactoryV1;
 import org.example.core.application.subcategory.factory.sortcalculator.SubCategorySortCalculator;
@@ -42,6 +46,7 @@ import org.example.core.application.subcategory.service.SubCategoryInternalQuery
 import org.example.core.application.subcategory.service.SubCategoryQueryServiceV1;
 import org.example.core.application.subcategory.usecase.SubCategoryCommandUseCase;
 import org.example.core.application.subcategory.usecase.SubCategoryQueryUseCase;
+import org.example.core.domain.card.Card;
 import org.example.core.domain.card.CardStore;
 import org.example.core.domain.category.Category;
 import org.example.core.domain.category.CategoryPort;
@@ -52,6 +57,8 @@ import org.example.filestore.api.FileStoreApi;
 import org.example.filestore.card.adapter.CardStoreAdapter;
 import org.example.filestore.card.manager.CardManager;
 import org.example.filestore.card.manager.CardManagerV1;
+import org.example.filestore.card.mapper.ToCardMapper;
+import org.example.filestore.card.model.CardModel;
 import org.example.filestore.category.adapter.CategoryStoreAdapter;
 import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.category.manager.CategoryManagerV1;
@@ -90,7 +97,8 @@ public abstract class AppConfig {
         FileNameGenerator fileNameGenerator = new UuidFileNameGenerator();
         SubCategoryManager subCategoryManager = new SubCategoryManagerV1();
         FileSystemManager fileSystemManager = new FileSystemManagerV1(metaDataManager, fileNameGenerator, categoryManager, subCategoryManager);
-        FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, fileSystemManager, metaDataManager);
+        CardManager cardManager = new CardManagerV1(fileSystemManager);
+        FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, cardManager, fileSystemManager, metaDataManager);
 
         List<CommandFormat> commandFormats = commandFormatList();
         CmdFormatRepository cmdFormatRepository = new MemoryCmdFormatRepository(commandFormats);
@@ -102,8 +110,8 @@ public abstract class AppConfig {
         CategorySortCalculator sortCalculator = new CategorySortCalculatorV1(categoryStore);
         CategoryFactory categoryFactory = new CategoryFactoryV1(sortCalculator);
         categoryCommandPort = new CategoryCommandServiceV1(categoryStore, categoryFactory);
-        DomainToModelMapper domainToModelMapper = new CategoryToModelMapperV1();
-        categoryQueryPort = new CategoryQueryServiceV1(categoryPort, domainToModelMapper);
+        ToResponseMapper<Category, CategoryCapture> toCategoryCapture = new CategoryToModelMapperV1();
+        categoryQueryPort = new CategoryQueryServiceV1(categoryPort, toCategoryCapture);
 
 
         ModelToDomainMapper<SubCategory, SubCategoryModel> modelToSubCategoryMapper = new ModelToSubCategoryMapperV1();
@@ -112,9 +120,9 @@ public abstract class AppConfig {
         SubCategorySortCalculator subCategorySortCalculator = new SubCategorySortCalculatorV1(subCategoryStore);
         SubCategoryFactory subCategoryFactory = new SubCategoryFactoryV1(subCategorySortCalculator);
         SubCategoryPort subCategoryPort = new SubCategoryInternalQueryServiceV1(subCategoryStore);
-        org.example.core.application.subcategory.mapper.DomainToModelMapper subCategoryToModelMapper = new SubCategoryToModelMapper();
-        CardManager cardManager = new CardManagerV1(fileSystemManager);
-        CardStore cardStore = new CardStoreAdapter(cardManager, fileSystemManager, metaDataManager);
+        ToResponseMapper<SubCategory, SubCategoryCapture> subCategoryToModelMapper = new SubCategoryToModelMapper();
+        ModelToDomainMapper<Card, CardModel> toCardMapper = new ToCardMapper();
+        CardStore cardStore = new CardStoreAdapter(cardManager, fileSystemManager, metaDataManager, toCardMapper);
         CardFactory cardFactory = new CardFactoryV1();
 
         subCategoryCommandUseCase = new SubCategoryCommandServiceV1(categoryPort, subCategoryStore, subCategoryFactory);
@@ -123,7 +131,8 @@ public abstract class AppConfig {
         RequesterInfo requesterInfo = new RequesterInfo();
 
         cardCommandUseCase = new CardCommandServiceV1(cardStore, cardFactory);
-        cardQueryUseCase = new CardQueryServiceV1();
+        ToResponseMapper<Card, CardCapture> cardToCaptureMapper = new CardToCaptureMapper();
+        cardQueryUseCase = new CardQueryServiceV1(cardStore, cardToCaptureMapper);
 
         List<CommandExecutor> commandExecutors = cmdExecutorList(fileStoreApi, requesterInfo, output);
         DefaultCmdExecutor defaultCmdExecutor = new DefaultCmdExecutor();
