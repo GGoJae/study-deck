@@ -55,6 +55,16 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     }
 
     @Override
+    public Long nextAnswerId() throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+        MetaDataModel metaData = getMetaDataAtTmp();
+
+        MetaDataModel afterIncrease  = metaData.increaseNextAnswerId();
+        mapper.writeValue(META_DATA_TMP_PATH.toFile(), afterIncrease);
+        return afterIncrease.nextAnswerId();
+    }
+
+    @Override
     public boolean isCurrentContentCard() throws IOException {
         MetaDataModel metaData = getMetaDataAtWork();
         return Objects.equals(metaData.focus().targetType(), Type.CARD);
@@ -64,6 +74,12 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     public Optional<Long> contentId() throws IOException {
         MetaDataModel metaData = getMetaDataAtWork();
         return Optional.ofNullable(metaData.focus().targetId());
+    }
+
+    @Override
+    public Focus currentFocus() throws IOException{
+        MetaDataModel metaData = getMetaDataAtWork();
+        return metaData.focus();
     }
 
     @Override
@@ -165,7 +181,7 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     @Override
     public void init() throws IOException {
         Files.createFile(META_DATA_WORK_PATH);
-        MetaDataModel metaData = new MetaDataModel(Focus.empty(), new Counters(0, 0, 0));
+        MetaDataModel metaData = new MetaDataModel(Focus.empty(), new Counters(0, 0, 0, 0));
         mapper.writeValue(META_DATA_WORK_PATH.toFile(), metaData);
     }
 

@@ -1,5 +1,6 @@
 package org.example.filestore.card.adapter;
 
+import org.example.core.domain.card.Answer;
 import org.example.core.domain.card.Card;
 import org.example.core.domain.card.CardStore;
 import org.example.filestore.card.manager.CardManager;
@@ -11,6 +12,7 @@ import org.example.filestore.shared.ModelToDomainMapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class CardStoreAdapter implements CardStore {
 
@@ -53,6 +55,30 @@ public class CardStoreAdapter implements CardStore {
     }
 
     @Override
+    public Long addAnswer(Long cardId, Answer answer) {
+        try {
+            cardManager.transaction();
+            metaDataManager.transaction();
+
+            CardModel cardModel = cardManager.findById(cardId).orElseThrow();
+            Long nextAnswerId = metaDataManager.nextAnswerId();
+            Answer withId = answer.withId(nextAnswerId);
+            CardModel updated = cardModel.addAnswer(withId);
+            cardManager.update(updated);
+
+            cardManager.commit();
+            metaDataManager.commit();
+            return nextAnswerId;
+
+        } catch (IOException e) {
+            cardManager.rollback();
+            metaDataManager.rollback();
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Override
     public List<Card> findBySubCategoryId(Long requesterId, Long subCategoryId) {
         try {
             return cardManager.findBySubCategoryId(subCategoryId)
@@ -60,6 +86,17 @@ public class CardStoreAdapter implements CardStore {
                     .filter(c -> Objects.equals(c.ownerId(), requesterId))
                     .map(mapper::toDomain)
                     .toList();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Optional<Card> findById(Long cardId) {
+        try {
+            return cardManager.findById(cardId)
+                    .map(mapper::toDomain);
 
         } catch (IOException e) {
             throw new RuntimeException(e);

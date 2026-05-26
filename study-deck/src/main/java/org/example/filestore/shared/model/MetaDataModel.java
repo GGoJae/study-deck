@@ -30,6 +30,10 @@ public record MetaDataModel(
         return new MetaDataModel(this.focus, this.counters.increaseCardId());
     }
 
+    public MetaDataModel increaseNextAnswerId() {
+        return new MetaDataModel(this.focus, this.counters.increaseAnswerId());
+    }
+
     public MetaDataModel ifIsCurrentCategoryReset(Long categoryId) {
         Focus newFocus = this.focus.ifIsCurrentCategoryReset(categoryId);
         if (Objects.equals(newFocus, focus)) {
@@ -58,6 +62,10 @@ public record MetaDataModel(
 
     public Long nextCardId() {
         return this.counters.nextCardId();
+    }
+
+    public Long nextAnswerId() {
+        return this.counters.nextAnswerId();
     }
 
     public Long selectedCategoryId() {

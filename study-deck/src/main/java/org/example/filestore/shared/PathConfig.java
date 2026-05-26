@@ -24,4 +24,8 @@ public class PathConfig {
     // card manager working file name
     public static final String CARD_WORK_NAME = "card.json";
     public static final String CARD_TMP_NAME = "card.tmp";
+
+    // answer submit manager path
+    public static final Path SUBMIT_WORK_PATH = Path.of("answer.txt");
+    public static final Path SUBMIT_LOCATION_PATH = WORKING_DIR.resolve("capture.json");
 }

@@ -3,6 +3,7 @@ package org.example.shared;
 import org.example.cli.excutor.*;
 import org.example.cli.info.RequesterInfo;
 import org.example.cli.input.BasicCommandInput;
+import org.example.cli.model.command.Command;
 import org.example.cli.model.format.CommandFormat;
 import org.example.cli.model.format.Essential;
 import org.example.cli.model.format.OptionFormat;
@@ -16,6 +17,8 @@ import org.example.cli.resolver.parser.CommandParser;
 import org.example.cli.resolver.validator.CommandValidator;
 import org.example.cli.resolver.validator.CommandValidatorV1;
 import org.example.core.application.card.dto.response.CardCapture;
+import org.example.core.application.card.factory.AnswerFactory;
+import org.example.core.application.card.factory.AnswerFactoryV1;
 import org.example.core.application.card.factory.CardFactory;
 import org.example.core.application.card.factory.CardFactoryV1;
 import org.example.core.application.card.mapper.CardToCaptureMapper;
@@ -66,6 +69,8 @@ import org.example.filestore.category.mapper.ModelToDomainMapperV1;
 import org.example.filestore.category.model.CategoryModel;
 import org.example.filestore.data.meta.manager.JacksonMetaDataManagerV1;
 import org.example.filestore.data.meta.manager.MetaDataManager;
+import org.example.filestore.data.session.SubmitFileManagerV1;
+import org.example.filestore.data.session.SubmitManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
 import org.example.filestore.filesystem.manager.FileSystemManagerV1;
 import org.example.filestore.filesystem.naming.FileNameGenerator;
@@ -98,7 +103,8 @@ public abstract class AppConfig {
         SubCategoryManager subCategoryManager = new SubCategoryManagerV1();
         FileSystemManager fileSystemManager = new FileSystemManagerV1(metaDataManager, fileNameGenerator, categoryManager, subCategoryManager);
         CardManager cardManager = new CardManagerV1(fileSystemManager);
-        FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, cardManager, fileSystemManager, metaDataManager);
+        SubmitManager submitManager = new SubmitFileManagerV1(metaDataManager);
+        FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, cardManager, fileSystemManager, metaDataManager, submitManager);
 
         List<CommandFormat> commandFormats = commandFormatList();
         CmdFormatRepository cmdFormatRepository = new MemoryCmdFormatRepository(commandFormats);
@@ -130,7 +136,8 @@ public abstract class AppConfig {
         SystemOutOutput output = new SystemOutOutput();
         RequesterInfo requesterInfo = new RequesterInfo();
 
-        cardCommandUseCase = new CardCommandServiceV1(cardStore, cardFactory);
+        AnswerFactory answerFactory = new AnswerFactoryV1();
+        cardCommandUseCase = new CardCommandServiceV1(cardStore, cardFactory, answerFactory);
         ToResponseMapper<Card, CardCapture> cardToCaptureMapper = new CardToCaptureMapper();
         cardQueryUseCase = new CardQueryServiceV1(cardStore, cardToCaptureMapper);
 
@@ -145,7 +152,9 @@ public abstract class AppConfig {
         CommandFormat catCmd = createCatCmd();
         CommandFormat subCmd = createSubCmd();
         CommandFormat cardCmd = createCardCmd();
-        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd);
+        CommandFormat editCmd = createEditCmd();
+        CommandFormat submitCmd = createSubmitCmd();
+        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd);
     }
 
     public static CommandResolver commandResolverInstance() {
@@ -169,7 +178,9 @@ public abstract class AppConfig {
         CatCmdExecutor catCmdExecutor = new CatCmdExecutor(categoryCommandPort, categoryQueryPort, requesterInfo, output, fileStoreApi);
         SubCmdExecutor subCmdExecutor = new SubCmdExecutor(requesterInfo, subCategoryQueryUseCase, subCategoryCommandUseCase, output, fileStoreApi);
         CardCmdExecutor cardCmdExecutor = new CardCmdExecutor(output, cardCommandUseCase, cardQueryUseCase, fileStoreApi, requesterInfo);
-        return List.of(initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor);
+        EditCmdExecutor editCmdExecutor = new EditCmdExecutor(fileStoreApi, output);
+        SubmitCmdExecutor submitCmdExecutor = new SubmitCmdExecutor(fileStoreApi, cardCommandUseCase, requesterInfo);
+        return List.of(initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor, editCmdExecutor, submitCmdExecutor);
     }
 
     private static CommandFormat createAddCmd() {
@@ -217,6 +228,14 @@ public abstract class AppConfig {
                 ));
     }
 
+    private static CommandFormat createEditCmd() {
+        return new CommandFormat("edit", Essential.NONE, Essential.NONE, Map.of());
+    }
+
+
+    private static CommandFormat createSubmitCmd() {
+        return new CommandFormat("submit", Essential.NONE, Essential.NONE, Map.of());
+    }
 
 
     public static void appStart(String[] args) {

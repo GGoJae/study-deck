@@ -1,27 +1,44 @@
 package org.example.core.application.card.service;
 
+import org.example.core.application.card.dto.request.AddAnswer;
 import org.example.core.application.card.dto.request.CreateCard;
+import org.example.core.application.card.factory.AnswerFactory;
 import org.example.core.application.card.factory.CardFactory;
 import org.example.core.application.card.usecase.CardCommandUseCase;
+import org.example.core.domain.card.Answer;
 import org.example.core.domain.card.Card;
 import org.example.core.domain.card.CardStore;
 
 public class CardCommandServiceV1 implements CardCommandUseCase {
 
-    public CardCommandServiceV1(CardStore store, CardFactory factory) {
+    public CardCommandServiceV1(CardStore store, CardFactory factory, AnswerFactory answerFactory) {
         this.store = store;
-        this.factory = factory;
+        this.cardFactory = factory;
+        this.answerFactory = answerFactory;
     }
 
     private final CardStore store;
-    private final CardFactory factory;
+    private final CardFactory cardFactory;
+    private final AnswerFactory answerFactory;
 
     @Override
     public Long create(CreateCard request) {
-        Card card = factory.create(request.ownerId(), request.subCategoryId(),
+        Card card = cardFactory.create(request.ownerId(), request.subCategoryId(),
                 request.displayName(), request.question());
         Card saved = store.save(card);
 
         return saved.getId();
     }
+
+    @Override
+    public Long addAnswer(AddAnswer request) {
+        Long cardId = request.cardId();
+        Card card = store.findById(cardId).orElseThrow();
+
+        Long requesterId = request.requesterId();
+        card.permissionCheck(requesterId);
+        Answer answer = answerFactory.create(requesterId, cardId, request.answer());
+        return store.addAnswer(cardId, answer);
+    }
+
 }

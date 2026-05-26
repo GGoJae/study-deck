@@ -13,4 +13,6 @@ public interface CardManager extends FileManager, Transactionable {
     Optional<CardModel> findById(Long cardId) throws IOException;
 
     List<CardModel> findBySubCategoryId(Long subCategoryId) throws IOException;
+
+    void update(CardModel updated) throws IOException;
 }

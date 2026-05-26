@@ -79,6 +79,12 @@ public class Card {
         );
     }
 
+    public void permissionCheck(Long requesterId) {
+        if (!Objects.equals(this.ownerId, requesterId)) {
+            throw new IllegalStateException("권한이 없습니다.");
+        }
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
@@ -90,4 +96,5 @@ public class Card {
     public int hashCode() {
         return Objects.hash(id, ownerId, subCategoryId, displayName, question, bestAnswer, createdAt, updatedAt, createdUser, updatedUser);
     }
+
 }

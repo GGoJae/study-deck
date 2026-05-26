@@ -39,6 +39,20 @@ public class CardManagerV1 implements CardManager {
     }
 
     @Override
+    public void update(CardModel updated) throws IOException {
+        Path currentPath = fileSystemManager.currentPath();
+        if (isTransactionOff(currentPath)) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        List<CardModel> cards = getCardsAtTmp(currentPath);
+        List<CardModel> afterUpdate = cards.stream().map(c -> {
+            if (Objects.equals(c.id(), updated.id())) return updated;
+            return c;
+        }).toList();
+
+        mapper.writeValue(currentPath.resolve(CARD_TMP_NAME).toFile(), afterUpdate);
+    }
+
+    @Override
     public Optional<CardModel> findById(Long cardId) throws IOException {
         Path currentPath = fileSystemManager.currentPath();
         List<CardModel> cardModels = getCardsAtWork(currentPath);

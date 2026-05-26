@@ -4,7 +4,9 @@ import org.example.filestore.card.manager.CardManager;
 import org.example.filestore.card.model.CardModel;
 import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.data.meta.manager.MetaDataManager;
+import org.example.filestore.data.session.SubmitManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
+import org.example.filestore.shared.model.AnswerSubmission;
 import org.example.filestore.subcategory.manager.SubCategoryManager;
 import org.example.filestore.subcategory.model.SubCategoryModel;
 
@@ -22,13 +24,14 @@ public class FileStoreApi {
     private final CardManager cardManager;
     private final FileSystemManager fileSystemManager;
     private final MetaDataManager metaDataManager;
-
-    public FileStoreApi(CategoryManager categoryManager, SubCategoryManager subCategoryManager, CardManager cardManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager) {
+    private final SubmitManager submitManager;
+    public FileStoreApi(CategoryManager categoryManager, SubCategoryManager subCategoryManager, CardManager cardManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager, SubmitManager submitManager) {
         this.categoryManager = categoryManager;
         this.subCategoryManager = subCategoryManager;
         this.cardManager = cardManager;
         this.fileSystemManager = fileSystemManager;
         this.metaDataManager = metaDataManager;
+        this.submitManager = submitManager;
     }
 
     public void fileStoreInit() {
@@ -124,6 +127,30 @@ public class FileStoreApi {
             metaDataManager.commit();
         } catch (IOException e) {
             metaDataManager.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void editAnswer() {
+        try {
+            submitManager.init();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public AnswerSubmission getContext() {
+        try {
+            return submitManager.getContext();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteSession() {
+        try {
+            submitManager.finish();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
