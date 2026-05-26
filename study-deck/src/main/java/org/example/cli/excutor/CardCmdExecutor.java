@@ -9,6 +9,7 @@ import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.card.usecase.CardCommandUseCase;
 import org.example.core.application.card.usecase.CardQueryUseCase;
 import org.example.filestore.api.FileStoreApi;
+import org.example.filestore.shared.model.Type;
 
 import java.util.List;
 import java.util.Objects;
@@ -50,6 +51,12 @@ public class CardCmdExecutor implements CommandExecutor{
             return;
         }
 
+        Option option = command.options().get(0);
+        if ("-s".equals(option.value())) {
+            selectCard(option);
+            return;
+        }
+
         if (!command.hasArgument()) {
             output.errorMessage("card 생성시 display name 은 필수입니다.");
             return;
@@ -59,15 +66,20 @@ public class CardCmdExecutor implements CommandExecutor{
         }
 
         String displayName = command.arguments().get(0);
-        Option option = command.options().get(0);
 
         if ("-q".equals(option.value())) {
             createCard(option, requesterId, currentSubCategory, displayName);
             return;
         }
 
+
         output.errorMessage("명령어를 확인해주세요.");
 
+    }
+
+    private void selectCard(Option option) {
+        long cardId = Long.parseLong(option.arguments().get(0));
+        fileStoreApi.selectCard(cardId);
     }
 
     private void createCard(Option option, Long requesterId, Long currentSubCategory, String displayName) {

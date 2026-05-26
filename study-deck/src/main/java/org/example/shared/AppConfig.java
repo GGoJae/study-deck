@@ -3,7 +3,6 @@ package org.example.shared;
 import org.example.cli.excutor.*;
 import org.example.cli.info.RequesterInfo;
 import org.example.cli.input.BasicCommandInput;
-import org.example.cli.model.command.Command;
 import org.example.cli.model.format.CommandFormat;
 import org.example.cli.model.format.Essential;
 import org.example.cli.model.format.OptionFormat;
@@ -154,7 +153,8 @@ public abstract class AppConfig {
         CommandFormat cardCmd = createCardCmd();
         CommandFormat editCmd = createEditCmd();
         CommandFormat submitCmd = createSubmitCmd();
-        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd);
+        CommandFormat discardCmd = createDiscardCmd();
+        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd);
     }
 
     public static CommandResolver commandResolverInstance() {
@@ -180,7 +180,8 @@ public abstract class AppConfig {
         CardCmdExecutor cardCmdExecutor = new CardCmdExecutor(output, cardCommandUseCase, cardQueryUseCase, fileStoreApi, requesterInfo);
         EditCmdExecutor editCmdExecutor = new EditCmdExecutor(fileStoreApi, output);
         SubmitCmdExecutor submitCmdExecutor = new SubmitCmdExecutor(fileStoreApi, cardCommandUseCase, requesterInfo);
-        return List.of(initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor, editCmdExecutor, submitCmdExecutor);
+        DiscardCmdExecutor discardCmdExecutor = new DiscardCmdExecutor(fileStoreApi);
+        return List.of(initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor, editCmdExecutor, submitCmdExecutor, discardCmdExecutor);
     }
 
     private static CommandFormat createAddCmd() {
@@ -221,10 +222,12 @@ public abstract class AppConfig {
 
     private static CommandFormat createCardCmd() {
         OptionFormat qOption = new OptionFormat("-q", Essential.REQUIRED);
+        OptionFormat sOption = new OptionFormat("-s", Essential.REQUIRED);
 
         return new CommandFormat("card", Essential.OPTIONAL, Essential.OPTIONAL,
                 Map.of(
-                        qOption.value(), qOption
+                        qOption.value(), qOption,
+                        sOption.value(), sOption
                 ));
     }
 
@@ -232,9 +235,12 @@ public abstract class AppConfig {
         return new CommandFormat("edit", Essential.NONE, Essential.NONE, Map.of());
     }
 
-
     private static CommandFormat createSubmitCmd() {
         return new CommandFormat("submit", Essential.NONE, Essential.NONE, Map.of());
+    }
+
+    private static CommandFormat createDiscardCmd() {
+        return new CommandFormat("discard", Essential.NONE, Essential.NONE, Map.of());
     }
 
 
