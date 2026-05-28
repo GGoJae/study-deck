@@ -11,15 +11,16 @@ import org.example.core.domain.card.Card;
 import org.example.core.domain.card.CardStore;
 
 import java.util.List;
+import java.util.Objects;
 
 public class PopCardServiceV1 implements PopCardUseCase {
 
     private final CardStore cardStore;
     private final ProgressPort progressPort;
     private final CardSelector cardSelector;
-    private final ToResponseMapper<CardProgress, CardForDeck> mapper;
+    private final ToResponseMapper<Card, CardForDeck> mapper;
 
-    public PopCardServiceV1(CardStore cardStore, ProgressPort progressPort, CardSelector cardSelector, ToResponseMapper<CardProgress, CardForDeck> mapper) {
+    public PopCardServiceV1(CardStore cardStore, ProgressPort progressPort, CardSelector cardSelector, ToResponseMapper<Card, CardForDeck> mapper) {
         this.cardStore = cardStore;
         this.progressPort = progressPort;
         this.cardSelector = cardSelector;
@@ -40,6 +41,9 @@ public class PopCardServiceV1 implements PopCardUseCase {
         Deck updated = synchronizeWith.progressUpdate(choose);
         progressPort.deckUpdate(updated);
 
-        return mapper.toResponse(nextProgress);
+        return cards.stream().filter(c -> Objects.equals(c.getId(), choose.cardId()))
+                .findAny()
+                .map(mapper::toResponse)
+                .orElseThrow();
     }
 }

@@ -8,6 +8,5 @@ import java.util.Optional;
 public interface ProgressPort {
 
     Optional<Deck> getDeck(Long subCategoryId);
-    void progressUpdate(CardProgress cardProgress);
     void deckUpdate(Deck deck);
 }
