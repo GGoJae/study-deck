@@ -13,6 +13,7 @@ import org.example.filestore.shared.model.Type;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class CardCmdExecutor implements CommandExecutor{
 
@@ -44,7 +45,13 @@ public class CardCmdExecutor implements CommandExecutor{
         }
 
         Long requesterId = requesterInfo.id();
-        Long currentSubCategory = fileStoreApi.currentSubCategory().orElse(null);
+        Optional<Long> optSubCategoryId = fileStoreApi.currentSubCategory();
+        if (optSubCategoryId.isEmpty()) {
+            output.errorMessage("서브카테고리가 선택되지 않았습니다.");
+            return;
+        }
+
+        Long currentSubCategory = optSubCategoryId.orElseThrow();
 
         if (!command.hasArgument() && !command.hasOptions()) {
             showCards(requesterId, currentSubCategory);
