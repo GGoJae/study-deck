@@ -29,8 +29,8 @@ public class PathConfig {
     public static final Path SUBMIT_WORK_PATH = Path.of("answer.txt");
     public static final Path SUBMIT_LOCATION_PATH = WORKING_DIR.resolve("capture.json");
 
-    // progress manager path
-    public static final Path PROGRESS_WORK_PATH = WORKING_DIR.resolve("progress.json");
-    public static final Path PROGRESS_TMP_PATH = WORKING_DIR.resolve("progress.tmp");
+    // progress manager name
+    public static final String PROGRESS_WORK_NAME = "progress.json";
+    public static final String PROGRESS_TMP_NAME = "progress.tmp";
 
 }

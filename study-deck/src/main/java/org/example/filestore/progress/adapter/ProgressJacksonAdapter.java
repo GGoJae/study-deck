@@ -1,10 +1,12 @@
 package org.example.filestore.progress.adapter;
 
+import org.example.core.application.progress.metadata.CardProgress;
 import org.example.core.application.progress.metadata.Deck;
 import org.example.core.application.progress.port.ProgressPort;
 import org.example.filestore.progress.manager.ProgressManager;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 public class ProgressJacksonAdapter implements ProgressPort {
@@ -16,9 +18,10 @@ public class ProgressJacksonAdapter implements ProgressPort {
     }
 
     @Override
-    public Optional<Deck> getDeck(Long subCategoryId) {
+    public Deck getDeck(Long subCategoryId) {
         try {
-            return progressManager.findBySubCategoryId(subCategoryId);
+            List<CardProgress> progresses = progressManager.findBySubCategoryId(subCategoryId);
+            return new Deck(subCategoryId, progresses);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

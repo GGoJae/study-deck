@@ -31,8 +31,7 @@ public class PopCardServiceV1 implements PopCardUseCase {
     public CardForDeck popNextCard(Long requesterId, Long subCategoryId) {
 
         List<Card> cards = cardStore.findBySubCategoryId(requesterId, subCategoryId);
-        Deck deck = progressPort.getDeck(subCategoryId)
-                .orElseGet(() -> Deck.init(subCategoryId));
+        Deck deck = progressPort.getDeck(subCategoryId);
         Deck synchronizeWith = deck.synchronizeWith(cards);
 
         CardProgress nextProgress = cardSelector.pickNextCard(synchronizeWith);

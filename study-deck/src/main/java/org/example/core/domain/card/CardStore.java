@@ -11,4 +11,6 @@ public interface CardStore {
     Optional<Card> findById(Long cardId);
 
     Long addAnswer(Long cardId, Answer answer);
+
+    void delete(Card card);
 }

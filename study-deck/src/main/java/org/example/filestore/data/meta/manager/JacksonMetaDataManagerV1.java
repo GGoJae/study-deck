@@ -135,6 +135,14 @@ public class JacksonMetaDataManagerV1 implements MetaDataManager{
     }
 
     @Override
+    public void ifCurrentContentReset(Type type, Long id) throws IOException {
+        if (isTransactionOff()) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+        MetaDataModel metaData = getMetaDataAtTmp();
+        MetaDataModel updated = metaData.ifIsCurrentContentReset(type, id);
+        mapper.writeValue(META_DATA_TMP_PATH.toFile(), updated);
+    }
+
+    @Override
     public void transaction() {
         if (isTransactionOn()) throw new IllegalStateException(ALREADY_STARTED_TRANSACTION);
 

@@ -8,6 +8,7 @@ import org.example.filestore.category.model.CategoryModel;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +37,8 @@ public class CategoryManagerV1 implements CategoryManager{
 
     @Override
     public Optional<CategoryModel> findById(Long categoryId) throws IOException {
-        return mapper.readValue(CATEGORY_WORK_PATH.toFile(), new TypeReference<List<CategoryModel>>() {})
+        Path path = isTransactionOn() ? CATEGORY_TMP_PATH : CATEGORY_WORK_PATH;
+        return mapper.readValue(path.toFile(), new TypeReference<List<CategoryModel>>() {})
                 .stream()
                 .filter(c -> categoryId.equals(c.id()))
                 .findAny();
@@ -44,7 +46,8 @@ public class CategoryManagerV1 implements CategoryManager{
 
     @Override
     public List<CategoryModel> findByOwnerId(Long ownerId, int offset, int limit) throws IOException {
-        List<CategoryModel> models = mapper.readValue(CATEGORY_WORK_PATH.toFile(), new TypeReference<List<CategoryModel>>() {
+        Path path = isTransactionOn() ? CATEGORY_TMP_PATH : CATEGORY_WORK_PATH;
+        List<CategoryModel> models = mapper.readValue(path.toFile(), new TypeReference<List<CategoryModel>>() {
                 })
                 .stream()
                 .sorted(Comparator.comparingInt(CategoryModel::sortKey))

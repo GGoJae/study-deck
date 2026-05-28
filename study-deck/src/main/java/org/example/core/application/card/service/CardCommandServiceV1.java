@@ -2,6 +2,7 @@ package org.example.core.application.card.service;
 
 import org.example.core.application.card.dto.request.AddAnswer;
 import org.example.core.application.card.dto.request.CreateCard;
+import org.example.core.application.card.dto.request.DeleteCard;
 import org.example.core.application.card.factory.AnswerFactory;
 import org.example.core.application.card.factory.CardFactory;
 import org.example.core.application.card.usecase.CardCommandUseCase;
@@ -39,6 +40,18 @@ public class CardCommandServiceV1 implements CardCommandUseCase {
         card.permissionCheck(requesterId);
         Answer answer = answerFactory.create(requesterId, cardId, request.answer());
         return store.addAnswer(cardId, answer);
+    }
+
+    @Override
+    public Long delete(DeleteCard request) {
+        Card card = store.findById(request.cardId()).orElseThrow();
+        Long requesterId = request.requesterId();
+
+        card.permissionCheck(requesterId);
+
+        store.delete(card);
+
+        return card.getId();
     }
 
 }

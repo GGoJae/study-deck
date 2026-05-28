@@ -103,6 +103,19 @@ public class FileSystemManagerV1 implements FileSystemManager {
     }
 
     @Override
+    public Optional<Path> subCategoryPath(long subCategoryId) throws IOException {
+        Optional<SubCategoryModel> subCategoryOpt = subCategoryManager.findById(subCategoryId);
+        if (subCategoryOpt.isEmpty()) return Optional.empty();
+
+        SubCategoryModel subCategory = subCategoryOpt.orElseThrow();
+        CategoryModel category = categoryManager.findById(subCategory.parentCategoryId()).orElseThrow();
+        if (isTransactionOn()) {
+            return Optional.of(FILE_SYSTEM_TMP_PATH.resolve(category.fileName()).resolve(subCategory.filename()));
+        }
+        return Optional.of(FILE_SYSTEM_WORK_PATH.resolve(category.fileName()).resolve(subCategory.filename()));
+    }
+
+    @Override
     public void transaction() {
         if (isTransactionOn()) throw new IllegalStateException(ALREADY_STARTED_TRANSACTION);
         try {

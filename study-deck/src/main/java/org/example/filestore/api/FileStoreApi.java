@@ -52,7 +52,6 @@ public class FileStoreApi {
             categoryManager.init();
             subCategoryManager.init();
             fileSystemManager.init();
-            progressManager.init();
 
             System.out.println("FileStore 생성이 완료됐습니다.");
         } catch (IOException e) {

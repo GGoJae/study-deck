@@ -114,7 +114,7 @@ public abstract class AppConfig {
         FileSystemManager fileSystemManager = new FileSystemManagerV1(metaDataManager, fileNameGenerator, categoryManager, subCategoryManager);
         CardManager cardManager = new CardManagerV1(fileSystemManager);
         SubmitManager submitManager = new SubmitFileManagerV1(metaDataManager);
-        ProgressManager progressManager = new ProgressManagerV1();
+        ProgressManager progressManager = new ProgressManagerV1(fileSystemManager);
         FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, cardManager, fileSystemManager, metaDataManager, submitManager, progressManager);
 
         List<CommandFormat> commandFormats = commandFormatList();
@@ -133,7 +133,7 @@ public abstract class AppConfig {
 
         ModelToDomainMapper<SubCategory, SubCategoryModel> modelToSubCategoryMapper = new ModelToSubCategoryMapperV1();
 
-        SubCategoryStoreAdapter subCategoryStore = new SubCategoryStoreAdapter(fileSystemManager, categoryManager, metaDataManager, subCategoryManager, modelToSubCategoryMapper);
+        SubCategoryStoreAdapter subCategoryStore = new SubCategoryStoreAdapter(fileSystemManager, categoryManager, metaDataManager, subCategoryManager, cardManager, progressManager, modelToSubCategoryMapper);
         SubCategorySortCalculator subCategorySortCalculator = new SubCategorySortCalculatorV1(subCategoryStore);
         SubCategoryFactory subCategoryFactory = new SubCategoryFactoryV1(subCategorySortCalculator);
         SubCategoryPort subCategoryPort = new SubCategoryInternalQueryServiceV1(subCategoryStore);

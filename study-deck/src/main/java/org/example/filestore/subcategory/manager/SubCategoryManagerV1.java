@@ -8,6 +8,7 @@ import org.example.filestore.subcategory.model.SubCategoryModel;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,7 +24,8 @@ public class SubCategoryManagerV1 implements SubCategoryManager {
     private final ObjectMapper mapper = JsonMapper.getInstance();
     @Override
     public List<SubCategoryModel> findByParentCategoryId(Long parentCategoryId) throws IOException {
-        return mapper.readValue(SUBCATEGORY_WORK_PATH.toFile(), new TypeReference<List<SubCategoryModel>>() {})
+        Path path = isTransactionOn() ? SUBCATEGORY_TMP_PATH : SUBCATEGORY_WORK_PATH;
+        return mapper.readValue(path.toFile(), new TypeReference<List<SubCategoryModel>>() {})
                 .stream()
                 .filter(s -> Objects.equals(s.parentCategoryId(), parentCategoryId))
                 .toList();
@@ -31,7 +33,8 @@ public class SubCategoryManagerV1 implements SubCategoryManager {
 
     @Override
     public Optional<SubCategoryModel> findById(Long subCategoryId) throws IOException {
-        return mapper.readValue(SUBCATEGORY_WORK_PATH.toFile(), new TypeReference<List<SubCategoryModel>>() {
+        Path path = isTransactionOn() ? SUBCATEGORY_TMP_PATH : SUBCATEGORY_WORK_PATH;
+        return mapper.readValue(path.toFile(), new TypeReference<List<SubCategoryModel>>() {
                 })
                 .stream()
                 .filter(s -> Objects.equals(subCategoryId, s.id()))

@@ -3,6 +3,7 @@ package org.example.filestore.data.meta.manager;
 import org.example.filestore.shared.FileManager;
 import org.example.filestore.shared.Transactionable;
 import org.example.filestore.shared.model.Focus;
+import org.example.filestore.shared.model.Type;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,4 +38,6 @@ public interface MetaDataManager extends Transactionable, FileManager {
     Optional<Long> contentId() throws IOException;
 
     Focus currentFocus() throws IOException;
+
+    void ifCurrentContentReset(Type type, Long id) throws IOException;
 }

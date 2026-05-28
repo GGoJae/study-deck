@@ -52,6 +52,15 @@ public record MetaDataModel(
         return new MetaDataModel(newFocus, this.counters);
     }
 
+    public MetaDataModel ifIsCurrentContentReset(Type type, Long id) {
+        Focus newFocus = this.focus.ifIsCurrentContentReset(type, id);
+        if (Objects.equals(newFocus, this.focus)) {
+            return this;
+        }
+
+        return new MetaDataModel(newFocus, this.counters);
+    }
+
     public Long nextCategoryId() {
         return this.counters.nextCategoryId();
     }

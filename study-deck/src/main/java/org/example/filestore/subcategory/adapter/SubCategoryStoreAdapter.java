@@ -2,15 +2,18 @@ package org.example.filestore.subcategory.adapter;
 
 import org.example.core.domain.subcategory.SubCategory;
 import org.example.core.domain.subcategory.SubCategoryStore;
+import org.example.filestore.card.manager.CardManager;
 import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.category.model.CategoryModel;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
+import org.example.filestore.progress.manager.ProgressManager;
 import org.example.filestore.shared.ModelToDomainMapper;
 import org.example.filestore.subcategory.manager.SubCategoryManager;
 import org.example.filestore.subcategory.model.SubCategoryModel;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,14 +23,19 @@ public class SubCategoryStoreAdapter implements SubCategoryStore {
     private final CategoryManager categoryManager;
     private final MetaDataManager metaDataManager;
     private final SubCategoryManager subCategoryManager;
+    private final CardManager cardManager;
+    private final ProgressManager progressManager;
+
     private final ModelToDomainMapper<SubCategory, SubCategoryModel> mapper;
 
 
-    public SubCategoryStoreAdapter(FileSystemManager fileSystemManager, CategoryManager categoryManager, MetaDataManager metaDataManager, SubCategoryManager subCategoryManager, ModelToDomainMapper<SubCategory, SubCategoryModel> mapper) {
+    public SubCategoryStoreAdapter(FileSystemManager fileSystemManager, CategoryManager categoryManager, MetaDataManager metaDataManager, SubCategoryManager subCategoryManager, CardManager cardManager, ProgressManager progressManager, ModelToDomainMapper<SubCategory, SubCategoryModel> mapper) {
         this.fileSystemManager = fileSystemManager;
         this.categoryManager = categoryManager;
         this.metaDataManager = metaDataManager;
         this.subCategoryManager = subCategoryManager;
+        this.cardManager = cardManager;
+        this.progressManager = progressManager;
         this.mapper = mapper;
     }
     @Override
@@ -65,6 +73,10 @@ public class SubCategoryStoreAdapter implements SubCategoryStore {
             String filename = fileSystemManager.createSubCategory(categoryFilename);
             SubCategoryModel model = SubCategoryModel.of(withId, filename);
             subCategoryManager.save(model);
+
+            Path path = fileSystemManager.subCategoryPath(withId.getId()).orElseThrow();
+            cardManager.init(path);
+            progressManager.init(path);
 
             metaDataManager.commit();
             fileSystemManager.commit();

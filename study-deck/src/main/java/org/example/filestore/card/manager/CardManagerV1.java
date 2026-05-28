@@ -53,6 +53,17 @@ public class CardManagerV1 implements CardManager {
     }
 
     @Override
+    public void delete(Long cardId) throws IOException {
+        Path currentPath = fileSystemManager.currentPath();
+        if (isTransactionOff(currentPath)) throw new IllegalStateException(NOT_STARTED_TRANSACTION);
+
+        List<CardModel> cards = getCardsAtTmp(currentPath);
+        List<CardModel> deleted = cards.stream().filter(c -> !Objects.equals(c.id(), cardId)).toList();
+
+        mapper.writeValue(currentPath.resolve(CARD_TMP_NAME).toFile(), deleted);
+    }
+
+    @Override
     public Optional<CardModel> findById(Long cardId) throws IOException {
         Path currentPath = fileSystemManager.currentPath();
         List<CardModel> cardModels = getCardsAtWork(currentPath);
@@ -71,9 +82,8 @@ public class CardManagerV1 implements CardManager {
     }
 
     @Override
-    public void init() throws IOException {
-        Path currentPath = fileSystemManager.currentPath();
-        Path resolve = Files.createFile(currentPath.resolve(CARD_WORK_NAME));
+    public void init(Path path) throws IOException {
+        Path resolve = Files.createFile(path.resolve(CARD_WORK_NAME));
         mapper.writeValue(resolve.toFile(), List.of());
     }
 
@@ -81,7 +91,6 @@ public class CardManagerV1 implements CardManager {
     public void transaction() {
         try {
             Path currentPath = fileSystemManager.currentPath();
-            if (notInit(currentPath)) this.init();
             if (isTransactionOn(currentPath)) throw new IllegalStateException(ALREADY_STARTED_TRANSACTION);
             Files.copy(currentPath.resolve(CARD_WORK_NAME), currentPath.resolve(CARD_TMP_NAME), COPY_ATTRIBUTES);
         } catch (IOException e) {
@@ -120,10 +129,6 @@ public class CardManagerV1 implements CardManager {
 
     private boolean isTransactionOn(Path currentPath) {
         return Files.exists(currentPath.resolve(CARD_TMP_NAME));
-    }
-
-    private boolean notInit(Path currentPath) {
-        return Files.notExists(currentPath.resolve(CARD_WORK_NAME));
     }
 
     private List<CardModel> getCardsAtTmp(Path currentPath) throws IOException {

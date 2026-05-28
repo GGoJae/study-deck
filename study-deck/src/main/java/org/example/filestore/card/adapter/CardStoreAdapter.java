@@ -8,6 +8,7 @@ import org.example.filestore.card.model.CardModel;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
 import org.example.filestore.shared.ModelToDomainMapper;
+import org.example.filestore.shared.model.Type;
 
 import java.io.IOException;
 import java.util.List;
@@ -76,6 +77,25 @@ public class CardStoreAdapter implements CardStore {
             throw new RuntimeException(e);
         }
 
+    }
+
+    @Override
+    public void delete(Card card) {
+        try {
+            cardManager.transaction();
+            metaDataManager.transaction();
+
+            cardManager.delete(card.getId());
+            metaDataManager.ifCurrentContentReset(Type.CARD, card.getId());
+
+            cardManager.commit();
+            metaDataManager.commit();
+
+        } catch (IOException e) {
+            cardManager.rollback();
+            metaDataManager.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

@@ -34,6 +34,13 @@ public record Focus(
         return this;
     }
 
+    public Focus ifIsCurrentContentReset(Type type, Long id) {
+        if (Objects.equals(this.targetType, type) && Objects.equals(this.targetId, id)) {
+            return new Focus(this.categoryId, this.subCategoryId, null, null);
+        }
+        return this;
+    }
+
     public Focus changeSubCategoryFocus(Long subCategoryId) {
         if (Objects.equals(this.subCategoryId, subCategoryId)) {
             return this;
