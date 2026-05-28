@@ -7,9 +7,8 @@ import org.example.filestore.common.JsonMapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.example.filestore.shared.Constant.*;
@@ -40,8 +39,17 @@ public class ProgressManagerV1 implements ProgressManager{
         List<Deck> decks = mapper.readValue(PROGRESS_TMP_PATH.toFile(), new TypeReference<List<Deck>>() {
         });
 
-        List<Deck> updated = decks.stream().map(d -> Objects.equals(d.subCategoryId(), target.subCategoryId()) ? target : d).toList();
-        mapper.writeValue(PROGRESS_TMP_PATH.toFile(), updated);
+        Set<Long> subCategoryIds = decks.stream().map(Deck::subCategoryId).collect(Collectors.toSet());
+        if (subCategoryIds.contains(target.subCategoryId())) {
+            List<Deck> updated = decks.stream().map(d -> Objects.equals(d.subCategoryId(), target.subCategoryId()) ? target : d).toList();
+            mapper.writeValue(PROGRESS_TMP_PATH.toFile(), updated);
+            return;
+        }
+
+        ArrayList<Deck> newList = new ArrayList<>(decks);
+        newList.add(target);
+        mapper.writeValue(PROGRESS_TMP_PATH.toFile(), newList);
+
     }
 
     private List<Deck> getDecksFromWork() throws IOException {

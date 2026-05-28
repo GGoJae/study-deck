@@ -37,6 +37,13 @@ import org.example.core.application.category.service.CategoryQueryServiceV1;
 import org.example.core.application.category.usecase.CategoryCommandUseCase;
 import org.example.core.application.category.usecase.CategoryQueryUseCase;
 import org.example.core.application.mapper.ToResponseMapper;
+import org.example.core.application.progress.dto.response.CardForDeck;
+import org.example.core.application.progress.mapper.CardToForDeckResponse;
+import org.example.core.application.progress.port.ProgressPort;
+import org.example.core.application.progress.selector.CardSelector;
+import org.example.core.application.progress.selector.OldestReviewedSelector;
+import org.example.core.application.progress.service.PopCardServiceV1;
+import org.example.core.application.progress.usecase.PopCardUseCase;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
 import org.example.core.application.subcategory.factory.SubCategoryFactory;
 import org.example.core.application.subcategory.factory.SubCategoryFactoryV1;
@@ -74,6 +81,9 @@ import org.example.filestore.filesystem.manager.FileSystemManager;
 import org.example.filestore.filesystem.manager.FileSystemManagerV1;
 import org.example.filestore.filesystem.naming.FileNameGenerator;
 import org.example.filestore.filesystem.naming.UuidFileNameGenerator;
+import org.example.filestore.progress.adapter.ProgressJacksonAdapter;
+import org.example.filestore.progress.manager.ProgressManager;
+import org.example.filestore.progress.manager.ProgressManagerV1;
 import org.example.filestore.shared.ModelToDomainMapper;
 import org.example.filestore.subcategory.adapter.SubCategoryStoreAdapter;
 import org.example.filestore.subcategory.manager.SubCategoryManager;
@@ -94,6 +104,7 @@ public abstract class AppConfig {
     private static final SubCategoryQueryUseCase subCategoryQueryUseCase;
     private static final CardCommandUseCase cardCommandUseCase;
     private static final CardQueryUseCase cardQueryUseCase;
+    private static final PopCardUseCase popCardUseCase;
 
     static {
         CategoryManager categoryManager = new CategoryManagerV1();
@@ -103,7 +114,8 @@ public abstract class AppConfig {
         FileSystemManager fileSystemManager = new FileSystemManagerV1(metaDataManager, fileNameGenerator, categoryManager, subCategoryManager);
         CardManager cardManager = new CardManagerV1(fileSystemManager);
         SubmitManager submitManager = new SubmitFileManagerV1(metaDataManager);
-        FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, cardManager, fileSystemManager, metaDataManager, submitManager);
+        ProgressManager progressManager = new ProgressManagerV1();
+        FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, cardManager, fileSystemManager, metaDataManager, submitManager, progressManager);
 
         List<CommandFormat> commandFormats = commandFormatList();
         CmdFormatRepository cmdFormatRepository = new MemoryCmdFormatRepository(commandFormats);
@@ -140,6 +152,11 @@ public abstract class AppConfig {
         ToResponseMapper<Card, CardCapture> cardToCaptureMapper = new CardToCaptureMapper();
         cardQueryUseCase = new CardQueryServiceV1(cardStore, cardToCaptureMapper);
 
+        ProgressPort progressPort = new ProgressJacksonAdapter(progressManager);
+        CardSelector cardSelector = new OldestReviewedSelector();
+        ToResponseMapper<Card, CardForDeck> toCardForDeck = new CardToForDeckResponse();
+        popCardUseCase = new PopCardServiceV1(cardStore, progressPort, cardSelector, toCardForDeck);
+
         List<CommandExecutor> commandExecutors = cmdExecutorList(fileStoreApi, requesterInfo, output);
         DefaultCmdExecutor defaultCmdExecutor = new DefaultCmdExecutor();
         commandResolver = new BasicCommandResolverV1(commandParser, commandExecutors, defaultCmdExecutor);
@@ -154,7 +171,8 @@ public abstract class AppConfig {
         CommandFormat editCmd = createEditCmd();
         CommandFormat submitCmd = createSubmitCmd();
         CommandFormat discardCmd = createDiscardCmd();
-        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd);
+        CommandFormat nextCmd = createNextCmd();
+        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd, nextCmd);
     }
 
     public static CommandResolver commandResolverInstance() {
@@ -181,7 +199,11 @@ public abstract class AppConfig {
         EditCmdExecutor editCmdExecutor = new EditCmdExecutor(fileStoreApi, output);
         SubmitCmdExecutor submitCmdExecutor = new SubmitCmdExecutor(fileStoreApi, cardCommandUseCase, requesterInfo);
         DiscardCmdExecutor discardCmdExecutor = new DiscardCmdExecutor(fileStoreApi);
-        return List.of(initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor, editCmdExecutor, submitCmdExecutor, discardCmdExecutor);
+        NextCmdExecutor nextCmdExecutor = new NextCmdExecutor(popCardUseCase, fileStoreApi, requesterInfo, output);
+        return List.of(
+                initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor,
+                editCmdExecutor, submitCmdExecutor, discardCmdExecutor, nextCmdExecutor
+        );
     }
 
     private static CommandFormat createAddCmd() {
@@ -241,6 +263,10 @@ public abstract class AppConfig {
 
     private static CommandFormat createDiscardCmd() {
         return new CommandFormat("discard", Essential.NONE, Essential.NONE, Map.of());
+    }
+
+    private static CommandFormat createNextCmd() {
+        return new CommandFormat("next", Essential.NONE, Essential.NONE, Map.of());
     }
 
 

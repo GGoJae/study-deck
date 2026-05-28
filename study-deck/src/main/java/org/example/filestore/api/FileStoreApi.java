@@ -6,6 +6,7 @@ import org.example.filestore.category.manager.CategoryManager;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.data.session.SubmitManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
+import org.example.filestore.progress.manager.ProgressManager;
 import org.example.filestore.shared.model.AnswerSubmission;
 import org.example.filestore.subcategory.manager.SubCategoryManager;
 import org.example.filestore.subcategory.model.SubCategoryModel;
@@ -25,13 +26,16 @@ public class FileStoreApi {
     private final FileSystemManager fileSystemManager;
     private final MetaDataManager metaDataManager;
     private final SubmitManager submitManager;
-    public FileStoreApi(CategoryManager categoryManager, SubCategoryManager subCategoryManager, CardManager cardManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager, SubmitManager submitManager) {
+    private final ProgressManager progressManager;
+
+    public FileStoreApi(CategoryManager categoryManager, SubCategoryManager subCategoryManager, CardManager cardManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager, SubmitManager submitManager, ProgressManager progressManager) {
         this.categoryManager = categoryManager;
         this.subCategoryManager = subCategoryManager;
         this.cardManager = cardManager;
         this.fileSystemManager = fileSystemManager;
         this.metaDataManager = metaDataManager;
         this.submitManager = submitManager;
+        this.progressManager = progressManager;
     }
 
     public void fileStoreInit() {
@@ -48,6 +52,8 @@ public class FileStoreApi {
             categoryManager.init();
             subCategoryManager.init();
             fileSystemManager.init();
+            progressManager.init();
+
             System.out.println("FileStore 생성이 완료됐습니다.");
         } catch (IOException e) {
             System.out.println("FileStore 생성에 실패했습니다.");

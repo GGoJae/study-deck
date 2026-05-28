@@ -1,5 +1,6 @@
 package org.example.cli.output;
 
+import org.example.cli.model.display.Question;
 import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.category.dto.response.CategoryCapture;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
@@ -47,5 +48,12 @@ public class SystemOutOutput implements Output{
                     return "[" + c.id() + "] " + c.displayName();
                 })
                 .forEach(System.out::println);
+    }
+
+    @Override
+    public void showQuestion(Question question) {
+        System.out.println(question.id());
+        System.out.println(question.title() + "\n");
+        System.out.println(question.question());
     }
 }
