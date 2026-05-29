@@ -24,13 +24,15 @@ public class CardStoreAdapter implements CardStore {
     private final FileSystemManager fileSystemManager;
     private final MetaDataManager metaDataManager;
     private final ModelToDomainMapper<Card, CardModel> mapper;
+    private final ModelToDomainMapper<Answer, AnswerModel> answerMapper;
 
-    public CardStoreAdapter(CardManager cardManager, AnswerManager answerManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager, ModelToDomainMapper<Card, CardModel> mapper) {
+    public CardStoreAdapter(CardManager cardManager, AnswerManager answerManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager, ModelToDomainMapper<Card, CardModel> mapper, ModelToDomainMapper<Answer, AnswerModel> answerMapper) {
         this.cardManager = cardManager;
         this.answerManager = answerManager;
         this.fileSystemManager = fileSystemManager;
         this.metaDataManager = metaDataManager;
         this.mapper = mapper;
+        this.answerMapper = answerMapper;
     }
 
     @Override
@@ -112,6 +114,16 @@ public class CardStoreAdapter implements CardStore {
             cardManager.commit();
         } catch (IOException e) {
             cardManager.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Optional<Answer> findAnswerByAnswerId(Long answerId) {
+        try {
+            return answerManager.findById(answerId)
+                    .map(answerMapper::toDomain);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

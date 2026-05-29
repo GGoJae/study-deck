@@ -1,8 +1,8 @@
 package org.example.cli.model.display;
 
-public record Question(
+public record Content(
         Long id,
         String title,
-        String question
+        String content
 ) {
 }

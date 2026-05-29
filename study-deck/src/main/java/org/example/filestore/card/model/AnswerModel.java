@@ -6,6 +6,7 @@ import java.time.Instant;
 
 public record AnswerModel(
         Long id,
+        Long ownerId,
         Long cardId,
         String content,
 
@@ -16,7 +17,7 @@ public record AnswerModel(
 ) {
     public static AnswerModel of(Answer answer) {
         return new AnswerModel(
-                answer.getId(), answer.getCardId(), answer.getContent(),
+                answer.getId(), answer.getOwnerId(), answer.getCardId(), answer.getContent(),
                 answer.getCreatedAt(), answer.getUpdatedAt(),
                 answer.getCreatedUser(), answer.getUpdatedUser()
         );

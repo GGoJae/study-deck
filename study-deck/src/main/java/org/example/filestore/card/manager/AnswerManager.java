@@ -5,7 +5,11 @@ import org.example.filestore.shared.FileNeedPathManager;
 import org.example.filestore.shared.Transactionable;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public interface AnswerManager extends FileNeedPathManager, Transactionable {
+
     void save(AnswerModel answerModel) throws IOException;
+
+    Optional<AnswerModel> findById(Long answerId) throws IOException;
 }

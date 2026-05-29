@@ -2,7 +2,7 @@ package org.example.cli.excutor;
 
 import org.example.cli.info.RequesterInfo;
 import org.example.cli.model.command.Command;
-import org.example.cli.model.display.Question;
+import org.example.cli.model.display.Content;
 import org.example.cli.output.Output;
 import org.example.core.application.progress.dto.response.CardForDeck;
 import org.example.core.application.progress.usecase.PopCardUseCase;
@@ -37,6 +37,6 @@ public class NextCmdExecutor implements CommandExecutor{
         Long subCategoryId = fileStoreApi.currentSubCategory().orElseThrow(() -> new IllegalStateException("서브 카테고리가 선택되지 않았습니다."));
         CardForDeck cardForDeck = popCardUseCase.popNextCard(requesterInfo.id(), subCategoryId);
         fileStoreApi.selectCard(cardForDeck.cardId());
-        output.showQuestion(new Question(cardForDeck.cardId(), cardForDeck.displayName(), cardForDeck.question()));
+        output.showContent(new Content(cardForDeck.cardId(), cardForDeck.displayName(), cardForDeck.question()));
     }
 }

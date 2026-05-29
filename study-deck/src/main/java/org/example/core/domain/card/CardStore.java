@@ -15,4 +15,6 @@ public interface CardStore {
     void delete(Card card);
 
     void update(Card updated);
+
+    Optional<Answer> findAnswerByAnswerId(Long answerId);
 }

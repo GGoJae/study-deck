@@ -15,11 +15,13 @@ import org.example.cli.resolver.parser.BasicParserV1;
 import org.example.cli.resolver.parser.CommandParser;
 import org.example.cli.resolver.validator.CommandValidator;
 import org.example.cli.resolver.validator.CommandValidatorV1;
+import org.example.core.application.card.dto.response.AnswerCapture;
 import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.card.factory.AnswerFactory;
 import org.example.core.application.card.factory.AnswerFactoryV1;
 import org.example.core.application.card.factory.CardFactory;
 import org.example.core.application.card.factory.CardFactoryV1;
+import org.example.core.application.card.mapper.AnswerToCaptureMapper;
 import org.example.core.application.card.mapper.CardToCaptureMapper;
 import org.example.core.application.card.service.CardCommandServiceV1;
 import org.example.core.application.card.service.CardQueryServiceV1;
@@ -55,6 +57,7 @@ import org.example.core.application.subcategory.service.SubCategoryInternalQuery
 import org.example.core.application.subcategory.service.SubCategoryQueryServiceV1;
 import org.example.core.application.subcategory.usecase.SubCategoryCommandUseCase;
 import org.example.core.application.subcategory.usecase.SubCategoryQueryUseCase;
+import org.example.core.domain.card.Answer;
 import org.example.core.domain.card.Card;
 import org.example.core.domain.card.CardStore;
 import org.example.core.domain.category.Category;
@@ -68,7 +71,9 @@ import org.example.filestore.card.manager.AnswerManager;
 import org.example.filestore.card.manager.AnswerManagerV1;
 import org.example.filestore.card.manager.CardManager;
 import org.example.filestore.card.manager.CardManagerV1;
+import org.example.filestore.card.mapper.ToAnswerMapper;
 import org.example.filestore.card.mapper.ToCardMapper;
+import org.example.filestore.card.model.AnswerModel;
 import org.example.filestore.card.model.CardModel;
 import org.example.filestore.category.adapter.CategoryStoreAdapter;
 import org.example.filestore.category.manager.CategoryManager;
@@ -142,7 +147,8 @@ public abstract class AppConfig {
         SubCategoryPort subCategoryPort = new SubCategoryInternalQueryServiceV1(subCategoryStore);
         ToResponseMapper<SubCategory, SubCategoryCapture> subCategoryToModelMapper = new SubCategoryToModelMapper();
         ModelToDomainMapper<Card, CardModel> toCardMapper = new ToCardMapper();
-        CardStore cardStore = new CardStoreAdapter(cardManager, answerManager, fileSystemManager, metaDataManager, toCardMapper);
+        ModelToDomainMapper<Answer, AnswerModel> toAnswerMapper = new ToAnswerMapper();
+        CardStore cardStore = new CardStoreAdapter(cardManager, answerManager, fileSystemManager, metaDataManager, toCardMapper, toAnswerMapper);
         CardFactory cardFactory = new CardFactoryV1();
 
         subCategoryCommandUseCase = new SubCategoryCommandServiceV1(categoryPort, subCategoryStore, subCategoryFactory);
@@ -153,7 +159,8 @@ public abstract class AppConfig {
         AnswerFactory answerFactory = new AnswerFactoryV1();
         cardCommandUseCase = new CardCommandServiceV1(cardStore, cardFactory, answerFactory);
         ToResponseMapper<Card, CardCapture> cardToCaptureMapper = new CardToCaptureMapper();
-        cardQueryUseCase = new CardQueryServiceV1(cardStore, cardToCaptureMapper);
+        ToResponseMapper<Answer, AnswerCapture> answerToCaptureMapper = new AnswerToCaptureMapper();
+        cardQueryUseCase = new CardQueryServiceV1(cardStore, cardToCaptureMapper, answerToCaptureMapper);
 
         ProgressPort progressPort = new ProgressJacksonAdapter(progressManager);
         CardSelector cardSelector = new OldestReviewedSelector();
@@ -175,7 +182,8 @@ public abstract class AppConfig {
         CommandFormat submitCmd = createSubmitCmd();
         CommandFormat discardCmd = createDiscardCmd();
         CommandFormat nextCmd = createNextCmd();
-        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd, nextCmd);
+        CommandFormat answerCmd = createAnswerCmd();
+        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd, nextCmd, answerCmd);
     }
 
     public static CommandResolver commandResolverInstance() {
@@ -203,9 +211,11 @@ public abstract class AppConfig {
         SubmitCmdExecutor submitCmdExecutor = new SubmitCmdExecutor(fileStoreApi, cardCommandUseCase, cardQueryUseCase, requesterInfo, output);
         DiscardCmdExecutor discardCmdExecutor = new DiscardCmdExecutor(fileStoreApi);
         NextCmdExecutor nextCmdExecutor = new NextCmdExecutor(popCardUseCase, fileStoreApi, requesterInfo, output);
+        AnswerCmdExecutor answerCmdExecutor = new AnswerCmdExecutor(fileStoreApi, cardQueryUseCase, output, requesterInfo);
         return List.of(
                 initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor,
-                editCmdExecutor, submitCmdExecutor, discardCmdExecutor, nextCmdExecutor
+                editCmdExecutor, submitCmdExecutor, discardCmdExecutor, nextCmdExecutor,
+                answerCmdExecutor
         );
     }
 
@@ -270,6 +280,10 @@ public abstract class AppConfig {
 
     private static CommandFormat createNextCmd() {
         return new CommandFormat("next", Essential.NONE, Essential.NONE, Map.of());
+    }
+
+    private static CommandFormat createAnswerCmd() {
+        return new CommandFormat("answer", Essential.OPTIONAL, Essential.OPTIONAL, Map.of());
     }
 
 

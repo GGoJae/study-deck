@@ -1,6 +1,6 @@
 package org.example.cli.output;
 
-import org.example.cli.model.display.Question;
+import org.example.cli.model.display.Content;
 import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.category.dto.response.CategoryCapture;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
@@ -51,9 +51,9 @@ public class SystemOutOutput implements Output{
     }
 
     @Override
-    public void showQuestion(Question question) {
-        System.out.println(question.id());
-        System.out.println(question.title() + "\n");
-        System.out.println(question.question());
+    public void showContent(Content content) {
+        System.out.println(content.id());
+        System.out.println(content.title() + "\n");
+        System.out.println(content.content());
     }
 }

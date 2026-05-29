@@ -48,6 +48,16 @@ public class AnswerManagerV1 implements AnswerManager{
     }
 
     @Override
+    public Optional<AnswerModel> findById(Long answerId) throws IOException {
+        Path path = fileSystemManager.currentPath();
+
+        List<AnswerModel> answerModels = mapper.readValue(path.resolve(ANSWER_WORK_NAME).toFile(), new TypeReference<List<AnswerModel>>() {
+        });
+
+        return answerModels.stream().filter(a -> Objects.equals(answerId, a.id())).findAny();
+    }
+
+    @Override
     public void init(Path path) throws IOException {
         Objects.requireNonNull(path);
 
