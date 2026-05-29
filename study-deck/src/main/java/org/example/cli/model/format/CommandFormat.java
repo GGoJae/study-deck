@@ -33,6 +33,10 @@ public record CommandFormat(
         if (this.optionRequirement == Essential.REQUIRED && !command.hasOptions()) return false;
         if (this.optionRequirement == Essential.NONE && command.hasOptions()) return false;
 
+        if (this.argumentRequirement == Essential.NONE && this.optionRequirement == Essential.NONE) {
+            return true;
+        }
+
         List<Option> options = command.options();
         for (Option o : options) {
             OptionFormat format = optionFormats.get(o.value());

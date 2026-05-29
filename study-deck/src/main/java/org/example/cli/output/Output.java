@@ -1,5 +1,8 @@
 package org.example.cli.output;
 
+import org.example.cli.model.display.Content;
+import org.example.cli.model.display.Status;
+import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.category.dto.response.CategoryCapture;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
 
@@ -11,4 +14,10 @@ public interface Output {
     void errorMessage(String message);
 
     void subAndCurrentSub(List<SubCategoryCapture> subCategories, Long focusSubCatId);
+
+    void showCards(List<CardCapture> cards, Long focusCardId);
+
+    void showContent(Content content);
+
+    void showStatus(Status status);
 }

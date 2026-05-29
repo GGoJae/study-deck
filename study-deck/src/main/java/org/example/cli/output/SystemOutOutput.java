@@ -1,16 +1,20 @@
 package org.example.cli.output;
 
+import org.example.cli.model.display.Content;
+import org.example.cli.model.display.Status;
+import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.category.dto.response.CategoryCapture;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
 
 import java.util.List;
+import java.util.Objects;
 
 public class SystemOutOutput implements Output{
     @Override
     public void categoriesAndCurrentCategory(List<CategoryCapture> categories, Long focusCategoryId) {
         categories.stream()
                 .map(c -> {
-                    if (c.id().equals(focusCategoryId)) {
+                    if (Objects.equals(c.id(), focusCategoryId)) {
                         return ConsoleColor.GREEN + "[" + c.id() + "] " + c.name() + ConsoleColor.RESET;
                     }
                     return "[" + c.id() + "] " + c.name();
@@ -27,11 +31,35 @@ public class SystemOutOutput implements Output{
     public void subAndCurrentSub(List<SubCategoryCapture> subCategories, Long focusSubCatId) {
         subCategories.stream()
                 .map(c -> {
-                    if (c.id().equals(focusSubCatId)) {
+                    if (Objects.equals(c.id(), focusSubCatId)) {
                         return ConsoleColor.GREEN + "[" + c.id() + "] " + c.name() + ConsoleColor.RESET;
                     }
                     return "[" + c.id() + "] " + c.name();
                 })
                 .forEach(System.out::println);
+    }
+
+    @Override
+    public void showCards(List<CardCapture> cards, Long focusCardId) {
+        cards.stream()
+                .map(c -> {
+                    if (Objects.equals(c.id(), focusCardId)) {
+                        return ConsoleColor.GREEN + "[" + c.id() + "] " + c.displayName() + ConsoleColor.RESET;
+                    }
+                    return "[" + c.id() + "] " + c.displayName();
+                })
+                .forEach(System.out::println);
+    }
+
+    @Override
+    public void showContent(Content content) {
+        System.out.println(content.id());
+        System.out.println(content.title() + "\n");
+        System.out.println(content.content());
+    }
+
+    @Override
+    public void showStatus(Status status) {
+        System.out.println(status.forDisplay());
     }
 }

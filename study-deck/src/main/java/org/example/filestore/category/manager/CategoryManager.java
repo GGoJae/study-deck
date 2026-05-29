@@ -13,8 +13,6 @@ public interface CategoryManager extends Transactionable, FileManager {
 
     void save(CategoryModel categoryModel) throws IOException;
 
-    String getFilename(Long categoryId) throws IOException;
-
     Optional<CategoryModel> findById(Long categoryId) throws IOException;
 
     List<CategoryModel> findByOwnerId(Long ownerId, int offset, int limit) throws  IOException;

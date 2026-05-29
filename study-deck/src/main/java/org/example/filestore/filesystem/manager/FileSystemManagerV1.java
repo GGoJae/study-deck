@@ -1,18 +1,19 @@
 package org.example.filestore.filesystem.manager;
 
 import org.apache.commons.io.FileUtils;
-import org.example.filestore.data.DataManager;
+import org.example.filestore.category.manager.CategoryManager;
+import org.example.filestore.category.model.CategoryModel;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.naming.FileNameGenerator;
-import org.example.filestore.filesystem.path.PathCalculator;
-import org.example.filestore.shared.model.Focus;
+import org.example.filestore.subcategory.manager.SubCategoryManager;
+import org.example.filestore.subcategory.model.SubCategoryModel;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Comparator;
-import java.util.stream.Stream;
+import java.util.Objects;
+import java.util.Optional;
 
 import static org.example.filestore.shared.Constant.*;
 import static org.example.filestore.shared.PathConfig.FILE_SYSTEM_TMP_PATH;
@@ -21,17 +22,16 @@ import static org.example.filestore.shared.PathConfig.FILE_SYSTEM_WORK_PATH;
 public class FileSystemManagerV1 implements FileSystemManager {
 
     private final MetaDataManager metaDataManager;
-    private final PathCalculator pathCalculator;
-    private final DataManager dataManager;
     private final FileNameGenerator fileNameGenerator;
+    private final CategoryManager categoryManager;
+    private final SubCategoryManager subCategoryManager;
 
-    public FileSystemManagerV1(MetaDataManager metaDataManager, PathCalculator pathCalculator, DataManager dataManager, FileNameGenerator fileNameGenerator) {
+    public FileSystemManagerV1(MetaDataManager metaDataManager, FileNameGenerator fileNameGenerator, CategoryManager categoryManager, SubCategoryManager subCategoryManager) {
         this.metaDataManager = metaDataManager;
-        this.pathCalculator = pathCalculator;
-        this.dataManager = dataManager;
         this.fileNameGenerator = fileNameGenerator;
+        this.categoryManager = categoryManager;
+        this.subCategoryManager = subCategoryManager;
     }
-
 
     @Override
     public String createCategoryFile() throws IOException {
@@ -70,6 +70,49 @@ public class FileSystemManagerV1 implements FileSystemManager {
 
         Path target = FILE_SYSTEM_TMP_PATH.resolve(categoryFilename).resolve(subCategoryFilename);
         FileUtils.deleteDirectory(target.toFile());
+    }
+
+    @Override
+    public Path currentPath() throws IOException {
+        Optional<Long> currentCategory = metaDataManager.currentCategory();
+        Optional<Long> currentSubCategory = metaDataManager.currentSubCategory();
+
+        if (isTransactionOn()) {
+            if (currentCategory.isEmpty()) {
+                return FILE_SYSTEM_TMP_PATH;
+            } else if (currentSubCategory.isEmpty()) {
+                String categoryFilename = categoryManager.findById(currentCategory.orElseThrow()).map(CategoryModel::fileName).orElseThrow();
+                return FILE_SYSTEM_TMP_PATH.resolve(categoryFilename);
+            } else {
+                String categoryFilename = categoryManager.findById(currentCategory.orElseThrow()).map(CategoryModel::fileName).orElseThrow();
+                String subCategoryFilename = subCategoryManager.findById(currentSubCategory.orElseThrow()).map(SubCategoryModel::filename).orElseThrow();
+                return FILE_SYSTEM_TMP_PATH.resolve(categoryFilename).resolve(subCategoryFilename);
+            }
+        } else {
+            if (currentCategory.isEmpty()) {
+                return FILE_SYSTEM_WORK_PATH;
+            } else if (currentSubCategory.isEmpty()) {
+                String categoryFilename = categoryManager.findById(currentCategory.orElseThrow()).map(CategoryModel::fileName).orElseThrow();
+                return FILE_SYSTEM_WORK_PATH.resolve(categoryFilename);
+            } else {
+                String categoryFilename = categoryManager.findById(currentCategory.orElseThrow()).map(CategoryModel::fileName).orElseThrow();
+                String subCategoryFilename = subCategoryManager.findById(currentSubCategory.orElseThrow()).map(SubCategoryModel::filename).orElseThrow();
+                return FILE_SYSTEM_WORK_PATH.resolve(categoryFilename).resolve(subCategoryFilename);
+            }
+        }
+    }
+
+    @Override
+    public Optional<Path> subCategoryPath(long subCategoryId) throws IOException {
+        Optional<SubCategoryModel> subCategoryOpt = subCategoryManager.findById(subCategoryId);
+        if (subCategoryOpt.isEmpty()) return Optional.empty();
+
+        SubCategoryModel subCategory = subCategoryOpt.orElseThrow();
+        CategoryModel category = categoryManager.findById(subCategory.parentCategoryId()).orElseThrow();
+        if (isTransactionOn()) {
+            return Optional.of(FILE_SYSTEM_TMP_PATH.resolve(category.fileName()).resolve(subCategory.filename()));
+        }
+        return Optional.of(FILE_SYSTEM_WORK_PATH.resolve(category.fileName()).resolve(subCategory.filename()));
     }
 
     @Override

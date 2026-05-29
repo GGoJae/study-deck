@@ -32,11 +32,11 @@ public class CategoryStoreAdapter implements CategoryStore {
 
     @Override
     public Category save(Category category) {
-        fileSystemManager.transaction();
-        categoryManager.transaction();
-        metaDataManager.transaction();
-
         try {
+            fileSystemManager.transaction();
+            categoryManager.transaction();
+            metaDataManager.transaction();
+
             Long nextId = metaDataManager.nextCategoryId();
             category = category.withId(nextId);
             String fileName = fileSystemManager.createCategoryFile();
@@ -60,6 +60,7 @@ public class CategoryStoreAdapter implements CategoryStore {
             metaDataManager.rollback();
             throw new RuntimeException(e);
         }
+
     }
 
     @Override

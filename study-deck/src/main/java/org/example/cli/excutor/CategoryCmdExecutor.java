@@ -14,7 +14,7 @@ import org.example.filestore.api.FileStoreApi;
 import java.util.List;
 import java.util.Objects;
 
-public class CatCmdExecutor implements CommandExecutor{
+public class CategoryCmdExecutor implements CommandExecutor{
 
     private final CategoryCommandUseCase categoryCommandPort;
     private final CategoryQueryUseCase categoryQueryPort;
@@ -22,7 +22,7 @@ public class CatCmdExecutor implements CommandExecutor{
     private final Output output;
     private final FileStoreApi fileStoreApi;
 
-    public CatCmdExecutor(CategoryCommandUseCase categoryCommandPort, CategoryQueryUseCase categoryQueryPort, RequesterInfo requesterInfo, Output output, FileStoreApi fileStoreApi) {
+    public CategoryCmdExecutor(CategoryCommandUseCase categoryCommandPort, CategoryQueryUseCase categoryQueryPort, RequesterInfo requesterInfo, Output output, FileStoreApi fileStoreApi) {
         this.categoryCommandPort = categoryCommandPort;
         this.categoryQueryPort = categoryQueryPort;
         this.requesterInfo = requesterInfo;
@@ -32,7 +32,7 @@ public class CatCmdExecutor implements CommandExecutor{
 
     @Override
     public String canResolvedCommand() {
-        return "cat";
+        return "category";
     }
 
     @Override
@@ -56,9 +56,7 @@ public class CatCmdExecutor implements CommandExecutor{
 
         Option option = options.get(0);
         String value = option.value();
-        if ("-s".equals(value)) {
-            selectCategory(option);
-        } else if ("-n".equals(value)) {
+        if ("-n".equals(value)) {
             renameCategory(option, requesterId);
         } else if ("-d".equals(value)) {
             deleteCategory(option, requesterId);
@@ -87,15 +85,6 @@ public class CatCmdExecutor implements CommandExecutor{
         }
     }
 
-    private void selectCategory(Option option) {
-        try {
-            long categoryId = Long.parseLong(option.arguments().get(0));
-            fileStoreApi.changeCurrentCategory(categoryId);
-        } catch (NumberFormatException nfe) {
-            output.errorMessage("category id 는 숫자 형식이어야 합니다.");
-        }
-    }
-
     private void createCategory(Command command, Long requesterId) {
         List<String> arguments = command.arguments();
         if (arguments.size() > 1) {
@@ -103,12 +92,13 @@ public class CatCmdExecutor implements CommandExecutor{
             return;
         }
         String categoryName = arguments.stream().findAny().orElseThrow();
-        categoryCommandPort.create(new CreateCategoryRequest(requesterId, categoryName, null));
+        Long id = categoryCommandPort.create(new CreateCategoryRequest(requesterId, categoryName, null));
+        fileStoreApi.changeCurrentCategory(id);
     }
 
     private void showCategoryList(Long requesterId) {
         List<CategoryCapture> ownCategories = categoryQueryPort.getOwnCategoriesForDisplay(new CategoryQuery(requesterId, 0, 100));
-        Long currentCategoryId = fileStoreApi.currentCategory();
+        Long currentCategoryId = fileStoreApi.currentCategory().orElse(null);
         output.categoriesAndCurrentCategory(ownCategories, currentCategoryId);
     }
 }

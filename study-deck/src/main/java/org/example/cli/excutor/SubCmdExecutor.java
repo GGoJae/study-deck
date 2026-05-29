@@ -42,7 +42,7 @@ public class SubCmdExecutor implements CommandExecutor{
         Objects.requireNonNull(command);
         Objects.requireNonNull(command.cmd());
         Long requesterId = requesterInfo.id();
-        Long currentCategory = fileStoreApi.currentCategory();
+        Long currentCategory = fileStoreApi.currentCategory().orElse(null);
         if (Objects.isNull(currentCategory)) {
             output.errorMessage("카테고리가 선택되지 않았습니다.");
             return;
@@ -56,16 +56,15 @@ public class SubCmdExecutor implements CommandExecutor{
         if (!command.hasOptions() && command.hasArgument()) {
             List<String> arguments = command.arguments();
             String name = arguments.get(0);
-            commandUseCase.createSubCategory(new CreateSubCategoryRequest(requesterId, currentCategory, name, null));
+            Long id = commandUseCase.createSubCategory(new CreateSubCategoryRequest(requesterId, currentCategory, name, null));
+            fileStoreApi.changeCurrentSubCategory(id);
             return;
         }
 
         List<Option> options = command.options();
         Option option = options.get(0);
         String value = option.value();
-        if ("-s".equals(value)) {
-            selectSubCategory(option);
-        } else if ("-n".equals(value)) {
+        if ("-n".equals(value)) {
             renameSubCategory(option, requesterId);
         } else if ("-d".equals(value)) {
             deleteSubCategory(option, requesterId);
@@ -97,17 +96,8 @@ public class SubCmdExecutor implements CommandExecutor{
         }
     }
 
-    private void selectSubCategory(Option option) {
-        try {
-            long subCategoryId = Long.parseLong(option.arguments().get(0));
-            fileStoreApi.changeCurrentSubCategory(subCategoryId);
-        } catch (NumberFormatException nfe) {
-            output.errorMessage("subCategory id 는 숫자 형식이어야 합니다.");
-        }
-    }
-
     private void showSubCategories(Long requesterId, Long currentCategory) {
-        Long currentSubCat = fileStoreApi.currentSubCategory();
+        Long currentSubCat = fileStoreApi.currentSubCategory().orElse(null);
         List<SubCategoryCapture> subCategories = queryUseCase.getSubCategories(requesterId, currentCategory);
         output.subAndCurrentSub(subCategories, currentSubCat);
     }
