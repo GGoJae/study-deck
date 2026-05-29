@@ -41,10 +41,10 @@ public class FileStoreApi {
     public void fileStoreInit() {
         try {
 
-        if (Files.exists(WORKING_DIR)) {
-            System.out.println("이미 .deck 디렉토리가 존재합니다.");
-            return;
-        }
+            if (Files.exists(WORKING_DIR)) {
+                System.out.println("이미 .deck 디렉토리가 존재합니다.");
+                return;
+            }
 
 
             Files.createDirectory(WORKING_DIR);
@@ -158,5 +158,9 @@ public class FileStoreApi {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean isWorkingOn() {
+        return submitManager.isWorkingOn();
     }
 }

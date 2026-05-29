@@ -59,10 +59,6 @@ public class CardCmdExecutor implements CommandExecutor{
         }
 
         Option option = command.options().get(0);
-        if ("-s".equals(option.value())) {
-            selectCard(option);
-            return;
-        }
 
         if (!command.hasArgument()) {
             output.errorMessage("card 생성시 display name 은 필수입니다.");
@@ -82,11 +78,6 @@ public class CardCmdExecutor implements CommandExecutor{
 
         output.errorMessage("명령어를 확인해주세요.");
 
-    }
-
-    private void selectCard(Option option) {
-        long cardId = Long.parseLong(option.arguments().get(0));
-        fileStoreApi.selectCard(cardId);
     }
 
     private void createCard(Option option, Long requesterId, Long currentSubCategory, String displayName) {

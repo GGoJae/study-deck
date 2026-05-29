@@ -9,4 +9,6 @@ public interface SubmitManager extends FileManager {
     AnswerSubmission getContext() throws IOException;
 
     void finish() throws IOException;
+
+    boolean isWorkingOn();
 }

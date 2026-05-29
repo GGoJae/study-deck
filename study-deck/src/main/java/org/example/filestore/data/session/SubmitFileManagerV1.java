@@ -39,6 +39,11 @@ public class SubmitFileManagerV1 implements SubmitManager {
     }
 
     @Override
+    public boolean isWorkingOn() {
+        return Files.exists(SUBMIT_WORK_PATH) || Files.exists(SUBMIT_LOCATION_PATH);
+    }
+
+    @Override
     public void init() throws IOException {
         if (Files.exists(SUBMIT_WORK_PATH) || Files.exists(SUBMIT_LOCATION_PATH)) {
             throw new IllegalStateException("이미 작업중 입니다.");

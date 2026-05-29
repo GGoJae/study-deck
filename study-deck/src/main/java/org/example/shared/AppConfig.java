@@ -175,7 +175,7 @@ public abstract class AppConfig {
     private static List<CommandFormat> commandFormatList() {
         CommandFormat addCmd = createAddCmd();
         CommandFormat initCmd = createInitCmd();
-        CommandFormat catCmd = createCatCmd();
+        CommandFormat catCmd = createCategoryCmd();
         CommandFormat subCmd = createSubCmd();
         CommandFormat cardCmd = createCardCmd();
         CommandFormat editCmd = createEditCmd();
@@ -183,7 +183,8 @@ public abstract class AppConfig {
         CommandFormat discardCmd = createDiscardCmd();
         CommandFormat nextCmd = createNextCmd();
         CommandFormat answerCmd = createAnswerCmd();
-        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd, nextCmd, answerCmd);
+        CommandFormat useCmd = createUseCmd();
+        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd, nextCmd, answerCmd, useCmd);
     }
 
     public static CommandResolver commandResolverInstance() {
@@ -204,7 +205,7 @@ public abstract class AppConfig {
 
     private static List<CommandExecutor> cmdExecutorList(FileStoreApi fileStoreApi, RequesterInfo requesterInfo, SystemOutOutput output) {
         InitCmdExecutor initCmdExecutor = new InitCmdExecutor(fileStoreApi);
-        CatCmdExecutor catCmdExecutor = new CatCmdExecutor(categoryCommandPort, categoryQueryPort, requesterInfo, output, fileStoreApi);
+        CategoryCmdExecutor catCmdExecutor = new CategoryCmdExecutor(categoryCommandPort, categoryQueryPort, requesterInfo, output, fileStoreApi);
         SubCmdExecutor subCmdExecutor = new SubCmdExecutor(requesterInfo, subCategoryQueryUseCase, subCategoryCommandUseCase, output, fileStoreApi);
         CardCmdExecutor cardCmdExecutor = new CardCmdExecutor(output, cardCommandUseCase, cardQueryUseCase, fileStoreApi, requesterInfo);
         EditCmdExecutor editCmdExecutor = new EditCmdExecutor(fileStoreApi, output);
@@ -212,10 +213,11 @@ public abstract class AppConfig {
         DiscardCmdExecutor discardCmdExecutor = new DiscardCmdExecutor(fileStoreApi);
         NextCmdExecutor nextCmdExecutor = new NextCmdExecutor(popCardUseCase, fileStoreApi, requesterInfo, output);
         AnswerCmdExecutor answerCmdExecutor = new AnswerCmdExecutor(fileStoreApi, cardQueryUseCase, output, requesterInfo);
+        UseCmdExecutor useCmdExecutor = new UseCmdExecutor(fileStoreApi, output);
         return List.of(
                 initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor,
                 editCmdExecutor, submitCmdExecutor, discardCmdExecutor, nextCmdExecutor,
-                answerCmdExecutor
+                answerCmdExecutor, useCmdExecutor
         );
     }
 
@@ -228,14 +230,12 @@ public abstract class AppConfig {
         return new CommandFormat("init", Essential.NONE, Essential.NONE, Map.of());
     }
 
-    private static CommandFormat createCatCmd() {
-        OptionFormat sOption = new OptionFormat("-s", Essential.REQUIRED);
+    private static CommandFormat createCategoryCmd() {
         OptionFormat nOption = new OptionFormat("-n", Essential.REQUIRED);
         OptionFormat dOption = new OptionFormat("-d", Essential.REQUIRED);
 
-        return new CommandFormat("cat", Essential.OPTIONAL, Essential.OPTIONAL,
+        return new CommandFormat("category", Essential.OPTIONAL, Essential.OPTIONAL,
                 Map.of(
-                        sOption.value(), sOption,
                         nOption.value(), nOption,
                         dOption.value(), dOption
                         )
@@ -243,13 +243,11 @@ public abstract class AppConfig {
     }
 
     private static CommandFormat createSubCmd() {
-        OptionFormat sOption = new OptionFormat("-s", Essential.REQUIRED);
         OptionFormat dOption = new OptionFormat("-d", Essential.REQUIRED);
         OptionFormat nOption = new OptionFormat("-n", Essential.REQUIRED);
 
         return new CommandFormat("sub", Essential.OPTIONAL, Essential.OPTIONAL,
                 Map.of(
-                        sOption.value(), sOption,
                         dOption.value(), dOption,
                         nOption.value(), nOption
                 ));
@@ -257,12 +255,10 @@ public abstract class AppConfig {
 
     private static CommandFormat createCardCmd() {
         OptionFormat qOption = new OptionFormat("-q", Essential.REQUIRED);
-        OptionFormat sOption = new OptionFormat("-s", Essential.REQUIRED);
 
         return new CommandFormat("card", Essential.OPTIONAL, Essential.OPTIONAL,
                 Map.of(
-                        qOption.value(), qOption,
-                        sOption.value(), sOption
+                        qOption.value(), qOption
                 ));
     }
 
@@ -284,6 +280,10 @@ public abstract class AppConfig {
 
     private static CommandFormat createAnswerCmd() {
         return new CommandFormat("answer", Essential.OPTIONAL, Essential.OPTIONAL, Map.of());
+    }
+
+    private static CommandFormat createUseCmd() {
+        return new CommandFormat("use", Essential.REQUIRED, Essential.NONE, Map.of());
     }
 
 

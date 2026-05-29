@@ -64,9 +64,7 @@ public class SubCmdExecutor implements CommandExecutor{
         List<Option> options = command.options();
         Option option = options.get(0);
         String value = option.value();
-        if ("-s".equals(value)) {
-            selectSubCategory(option);
-        } else if ("-n".equals(value)) {
+        if ("-n".equals(value)) {
             renameSubCategory(option, requesterId);
         } else if ("-d".equals(value)) {
             deleteSubCategory(option, requesterId);
@@ -95,15 +93,6 @@ public class SubCmdExecutor implements CommandExecutor{
             output.errorMessage("subCategory id 는 숫자 형식이어야 합니다.");
         } catch (IndexOutOfBoundsException iobe) {
             output.errorMessage("변경할 이름을 입력해주세요");
-        }
-    }
-
-    private void selectSubCategory(Option option) {
-        try {
-            long subCategoryId = Long.parseLong(option.arguments().get(0));
-            fileStoreApi.changeCurrentSubCategory(subCategoryId);
-        } catch (NumberFormatException nfe) {
-            output.errorMessage("subCategory id 는 숫자 형식이어야 합니다.");
         }
     }
 
