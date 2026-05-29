@@ -64,6 +64,8 @@ import org.example.core.domain.subcategory.SubCategory;
 import org.example.core.domain.subcategory.SubCategoryPort;
 import org.example.filestore.api.FileStoreApi;
 import org.example.filestore.card.adapter.CardStoreAdapter;
+import org.example.filestore.card.manager.AnswerManager;
+import org.example.filestore.card.manager.AnswerManagerV1;
 import org.example.filestore.card.manager.CardManager;
 import org.example.filestore.card.manager.CardManagerV1;
 import org.example.filestore.card.mapper.ToCardMapper;
@@ -116,6 +118,7 @@ public abstract class AppConfig {
         SubmitManager submitManager = new SubmitFileManagerV1(metaDataManager);
         ProgressManager progressManager = new ProgressManagerV1(fileSystemManager);
         FileStoreApi fileStoreApi = new FileStoreApi(categoryManager, subCategoryManager, cardManager, fileSystemManager, metaDataManager, submitManager, progressManager);
+        AnswerManager answerManager = new AnswerManagerV1(fileSystemManager);
 
         List<CommandFormat> commandFormats = commandFormatList();
         CmdFormatRepository cmdFormatRepository = new MemoryCmdFormatRepository(commandFormats);
@@ -133,13 +136,13 @@ public abstract class AppConfig {
 
         ModelToDomainMapper<SubCategory, SubCategoryModel> modelToSubCategoryMapper = new ModelToSubCategoryMapperV1();
 
-        SubCategoryStoreAdapter subCategoryStore = new SubCategoryStoreAdapter(fileSystemManager, categoryManager, metaDataManager, subCategoryManager, cardManager, progressManager, modelToSubCategoryMapper);
+        SubCategoryStoreAdapter subCategoryStore = new SubCategoryStoreAdapter(fileSystemManager, categoryManager, metaDataManager, subCategoryManager, cardManager, answerManager, progressManager, modelToSubCategoryMapper);
         SubCategorySortCalculator subCategorySortCalculator = new SubCategorySortCalculatorV1(subCategoryStore);
         SubCategoryFactory subCategoryFactory = new SubCategoryFactoryV1(subCategorySortCalculator);
         SubCategoryPort subCategoryPort = new SubCategoryInternalQueryServiceV1(subCategoryStore);
         ToResponseMapper<SubCategory, SubCategoryCapture> subCategoryToModelMapper = new SubCategoryToModelMapper();
         ModelToDomainMapper<Card, CardModel> toCardMapper = new ToCardMapper();
-        CardStore cardStore = new CardStoreAdapter(cardManager, fileSystemManager, metaDataManager, toCardMapper);
+        CardStore cardStore = new CardStoreAdapter(cardManager, answerManager, fileSystemManager, metaDataManager, toCardMapper);
         CardFactory cardFactory = new CardFactoryV1();
 
         subCategoryCommandUseCase = new SubCategoryCommandServiceV1(categoryPort, subCategoryStore, subCategoryFactory);
@@ -197,7 +200,7 @@ public abstract class AppConfig {
         SubCmdExecutor subCmdExecutor = new SubCmdExecutor(requesterInfo, subCategoryQueryUseCase, subCategoryCommandUseCase, output, fileStoreApi);
         CardCmdExecutor cardCmdExecutor = new CardCmdExecutor(output, cardCommandUseCase, cardQueryUseCase, fileStoreApi, requesterInfo);
         EditCmdExecutor editCmdExecutor = new EditCmdExecutor(fileStoreApi, output);
-        SubmitCmdExecutor submitCmdExecutor = new SubmitCmdExecutor(fileStoreApi, cardCommandUseCase, requesterInfo);
+        SubmitCmdExecutor submitCmdExecutor = new SubmitCmdExecutor(fileStoreApi, cardCommandUseCase, cardQueryUseCase, requesterInfo, output);
         DiscardCmdExecutor discardCmdExecutor = new DiscardCmdExecutor(fileStoreApi);
         NextCmdExecutor nextCmdExecutor = new NextCmdExecutor(popCardUseCase, fileStoreApi, requesterInfo, output);
         return List.of(

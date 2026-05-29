@@ -13,4 +13,6 @@ public interface CardStore {
     Long addAnswer(Long cardId, Answer answer);
 
     void delete(Card card);
+
+    void update(Card updated);
 }

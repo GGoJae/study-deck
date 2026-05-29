@@ -45,8 +45,7 @@ public class CardManagerV1 implements CardManager {
 
         List<CardModel> cards = getCardsAtTmp(currentPath);
         List<CardModel> afterUpdate = cards.stream().map(c -> {
-            if (Objects.equals(c.id(), updated.id())) return updated;
-            return c;
+            return Objects.equals(c.id(), updated.id()) ? updated : c;
         }).toList();
 
         mapper.writeValue(currentPath.resolve(CARD_TMP_NAME).toFile(), afterUpdate);

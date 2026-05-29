@@ -25,6 +25,9 @@ public class PathConfig {
     public static final String CARD_WORK_NAME = "card.json";
     public static final String CARD_TMP_NAME = "card.tmp";
 
+    public static final String ANSWER_WORK_NAME = "answer.json";
+    public static final String ANSWER_TMP_NAME = "answer.tmp";
+
     // answer submit manager path
     public static final Path SUBMIT_WORK_PATH = Path.of("answer.txt");
     public static final Path SUBMIT_LOCATION_PATH = WORKING_DIR.resolve("capture.json");

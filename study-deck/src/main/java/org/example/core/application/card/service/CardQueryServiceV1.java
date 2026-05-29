@@ -7,6 +7,7 @@ import org.example.core.domain.card.Card;
 import org.example.core.domain.card.CardStore;
 
 import java.util.List;
+import java.util.Optional;
 
 public class CardQueryServiceV1 implements CardQueryUseCase {
 
@@ -24,5 +25,14 @@ public class CardQueryServiceV1 implements CardQueryUseCase {
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    public Optional<CardCapture> getCard(Long requesterId, Long cardId) {
+        return store.findById(cardId).map(c -> {
+            c.permissionCheck(requesterId);
+            return mapper.toResponse(c);
+        });
+
     }
 }

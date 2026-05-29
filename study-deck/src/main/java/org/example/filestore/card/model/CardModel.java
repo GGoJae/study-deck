@@ -14,7 +14,6 @@ public record CardModel(
     String displayName,
     String question,
     Long bestAnswer,
-    List<AnswerModel> answers,
 
     Instant createdAt,
     Instant updatedAt,
@@ -24,47 +23,25 @@ public record CardModel(
     public static CardModel of(Card domain) {
         return new CardModel(
                 domain.getId(), domain.getOwnerId(), domain.getSubCategoryId(), domain.getDisplayName(),
-                domain.getQuestion(), domain.getBestAnswer(), List.of(),
+                domain.getQuestion(), domain.getBestAnswer(),
                 domain.getCreatedAt(), domain.getUpdatedAt(),
                 domain.getCreatedUser(), domain.getUpdatedUser()
         );
     }
 
-    public List<AnswerModel> answers() {
-        return List.copyOf(this.answers);
-    }
-
-    public CardModel addAnswer(Answer answer) {
-        Objects.requireNonNull(answer);
-        if (!Objects.equals(this.ownerId, answer.getOwnerId())) throw new IllegalStateException();
-        if (!Objects.equals(this.id, answer.getCardId())) throw new IllegalStateException();
-
-        List<AnswerModel> newList = new java.util.ArrayList<>(this.answers);
-        newList.add(AnswerModel.of(answer));
+    public CardModel updateCard(CardModel card) {
+        Objects.requireNonNull(card);
+        if (!Objects.equals(this.ownerId, card.ownerId())) throw new IllegalStateException();
+        if (!Objects.equals(card.id, this.id)) {
+            throw new IllegalStateException();
+        }
 
         return new CardModel(
-                this.id, this.ownerId, this.subCategoryId,
-                this.displayName, this.question, this.bestAnswer,
-                newList, this.createdAt, this.updatedAt,
-                this.createdUser, this.updatedUser
+                card.id, card.ownerId, card.subCategoryId,
+                card.displayName, card.question, card.bestAnswer,
+                card.createdAt, card.updatedAt,
+                card.createdUser, card.updatedUser
         );
     }
 
-    public record AnswerModel(
-            Long id,
-            String content,
-
-            Instant createdAt,
-            Instant updatedAt,
-            Long createdUser,
-            Long updatedUser
-    ) {
-        public static AnswerModel of(Answer answer) {
-            return new AnswerModel(
-                    answer.getId(), answer.getContent(),
-                    answer.getCreatedAt(), answer.getUpdatedAt(),
-                    answer.getCreatedUser(), answer.getUpdatedUser()
-            );
-        }
-    }
 }

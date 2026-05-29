@@ -3,7 +3,9 @@ package org.example.filestore.card.adapter;
 import org.example.core.domain.card.Answer;
 import org.example.core.domain.card.Card;
 import org.example.core.domain.card.CardStore;
+import org.example.filestore.card.manager.AnswerManager;
 import org.example.filestore.card.manager.CardManager;
+import org.example.filestore.card.model.AnswerModel;
 import org.example.filestore.card.model.CardModel;
 import org.example.filestore.data.meta.manager.MetaDataManager;
 import org.example.filestore.filesystem.manager.FileSystemManager;
@@ -18,12 +20,14 @@ import java.util.Optional;
 public class CardStoreAdapter implements CardStore {
 
     private final CardManager cardManager;
+    private final AnswerManager answerManager;
     private final FileSystemManager fileSystemManager;
     private final MetaDataManager metaDataManager;
     private final ModelToDomainMapper<Card, CardModel> mapper;
 
-    public CardStoreAdapter(CardManager cardManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager, ModelToDomainMapper<Card, CardModel> mapper) {
+    public CardStoreAdapter(CardManager cardManager, AnswerManager answerManager, FileSystemManager fileSystemManager, MetaDataManager metaDataManager, ModelToDomainMapper<Card, CardModel> mapper) {
         this.cardManager = cardManager;
+        this.answerManager = answerManager;
         this.fileSystemManager = fileSystemManager;
         this.metaDataManager = metaDataManager;
         this.mapper = mapper;
@@ -58,21 +62,20 @@ public class CardStoreAdapter implements CardStore {
     @Override
     public Long addAnswer(Long cardId, Answer answer) {
         try {
-            cardManager.transaction();
             metaDataManager.transaction();
+            answerManager.transaction();
 
-            CardModel cardModel = cardManager.findById(cardId).orElseThrow();
             Long nextAnswerId = metaDataManager.nextAnswerId();
             Answer withId = answer.withId(nextAnswerId);
-            CardModel updated = cardModel.addAnswer(withId);
-            cardManager.update(updated);
+            AnswerModel answerModel = AnswerModel.of(withId);
+            answerManager.save(answerModel);
 
-            cardManager.commit();
+            answerManager.commit();
             metaDataManager.commit();
             return nextAnswerId;
 
         } catch (IOException e) {
-            cardManager.rollback();
+            answerManager.rollback();
             metaDataManager.rollback();
             throw new RuntimeException(e);
         }
@@ -94,6 +97,21 @@ public class CardStoreAdapter implements CardStore {
         } catch (IOException e) {
             cardManager.rollback();
             metaDataManager.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void update(Card updated) {
+        try {
+            cardManager.transaction();
+
+            CardModel cardModel = CardModel.of(updated);
+            cardManager.update(cardModel);
+
+            cardManager.commit();
+        } catch (IOException e) {
+            cardManager.rollback();
             throw new RuntimeException(e);
         }
     }

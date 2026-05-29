@@ -85,6 +85,15 @@ public class Card {
         }
     }
 
+    public Card changeBestAnswer(Long answerId) {
+        return new Card(
+                this.id, this.ownerId, this.subCategoryId,
+                this.displayName, this.question, answerId,
+                this.createdAt, this.updatedAt,
+                this.createdUser, this.updatedUser
+        );
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
