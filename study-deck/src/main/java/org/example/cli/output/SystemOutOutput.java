@@ -1,6 +1,7 @@
 package org.example.cli.output;
 
 import org.example.cli.model.display.Content;
+import org.example.cli.model.display.Status;
 import org.example.core.application.card.dto.response.CardCapture;
 import org.example.core.application.category.dto.response.CategoryCapture;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
@@ -55,5 +56,10 @@ public class SystemOutOutput implements Output{
         System.out.println(content.id());
         System.out.println(content.title() + "\n");
         System.out.println(content.content());
+    }
+
+    @Override
+    public void showStatus(Status status) {
+        System.out.println(status.forDisplay());
     }
 }

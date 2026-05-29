@@ -184,7 +184,8 @@ public abstract class AppConfig {
         CommandFormat nextCmd = createNextCmd();
         CommandFormat answerCmd = createAnswerCmd();
         CommandFormat useCmd = createUseCmd();
-        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd, nextCmd, answerCmd, useCmd);
+        CommandFormat statusCmd = createStatusCmd();
+        return List.of(addCmd, initCmd, catCmd, subCmd, cardCmd, editCmd, submitCmd, discardCmd, nextCmd, answerCmd, useCmd, statusCmd);
     }
 
     public static CommandResolver commandResolverInstance() {
@@ -214,10 +215,11 @@ public abstract class AppConfig {
         NextCmdExecutor nextCmdExecutor = new NextCmdExecutor(popCardUseCase, fileStoreApi, requesterInfo, output);
         AnswerCmdExecutor answerCmdExecutor = new AnswerCmdExecutor(fileStoreApi, cardQueryUseCase, output, requesterInfo);
         UseCmdExecutor useCmdExecutor = new UseCmdExecutor(fileStoreApi, output);
+        StatusCmdExecutor statusCmdExecutor = new StatusCmdExecutor(fileStoreApi, output, requesterInfo, categoryQueryPort, subCategoryQueryUseCase, cardQueryUseCase);
         return List.of(
                 initCmdExecutor, catCmdExecutor, subCmdExecutor, cardCmdExecutor,
                 editCmdExecutor, submitCmdExecutor, discardCmdExecutor, nextCmdExecutor,
-                answerCmdExecutor, useCmdExecutor
+                answerCmdExecutor, useCmdExecutor, statusCmdExecutor
         );
     }
 
@@ -284,6 +286,10 @@ public abstract class AppConfig {
 
     private static CommandFormat createUseCmd() {
         return new CommandFormat("use", Essential.REQUIRED, Essential.NONE, Map.of());
+    }
+
+    private static CommandFormat createStatusCmd() {
+        return new CommandFormat("status", Essential.NONE, Essential.NONE, Map.of());
     }
 
 
