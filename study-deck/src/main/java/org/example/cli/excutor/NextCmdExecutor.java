@@ -6,6 +6,7 @@ import org.example.cli.model.display.Content;
 import org.example.cli.output.Output;
 import org.example.core.application.progress.dto.response.CardForDeck;
 import org.example.core.application.progress.usecase.PopCardUseCase;
+import org.example.core.application.progress.vo.PopStrategy;
 import org.example.filestore.api.FileStoreApi;
 
 import java.util.Objects;
@@ -35,7 +36,15 @@ public class NextCmdExecutor implements CommandExecutor{
         Objects.requireNonNull(command.cmd());
 
         Long subCategoryId = fileStoreApi.currentSubCategory().orElseThrow(() -> new IllegalStateException("서브 카테고리가 선택되지 않았습니다."));
-        CardForDeck cardForDeck = popCardUseCase.popNextCard(requesterInfo.id(), subCategoryId);
+        if (!command.hasArgument() && !command.hasOptions()) {
+            oldestStrategy(subCategoryId);
+            return;
+        }
+
+    }
+
+    private void oldestStrategy(Long subCategoryId) {
+        CardForDeck cardForDeck = popCardUseCase.popNextCard(requesterInfo.id(), subCategoryId, PopStrategy.OLDEST);
         fileStoreApi.selectCard(cardForDeck.cardId());
         output.showContent(new Content(cardForDeck.cardId(), cardForDeck.displayName(), cardForDeck.question()));
     }

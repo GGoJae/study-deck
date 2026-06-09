@@ -6,7 +6,9 @@ import org.example.core.application.progress.metadata.CardProgress;
 import org.example.core.application.progress.metadata.Deck;
 import org.example.core.application.progress.port.ProgressPort;
 import org.example.core.application.progress.selector.CardSelector;
+import org.example.core.application.progress.selector.SelectStrategyStorage;
 import org.example.core.application.progress.usecase.PopCardUseCase;
+import org.example.core.application.progress.vo.PopStrategy;
 import org.example.core.domain.card.Card;
 import org.example.core.domain.card.CardStore;
 
@@ -17,24 +19,24 @@ public class PopCardServiceV1 implements PopCardUseCase {
 
     private final CardStore cardStore;
     private final ProgressPort progressPort;
-    private final CardSelector cardSelector;
+    private final SelectStrategyStorage selectStrategyStorage;
     private final ToResponseMapper<Card, CardForDeck> mapper;
 
-    public PopCardServiceV1(CardStore cardStore, ProgressPort progressPort, CardSelector cardSelector, ToResponseMapper<Card, CardForDeck> mapper) {
+    public PopCardServiceV1(CardStore cardStore, ProgressPort progressPort, SelectStrategyStorage selectStrategyStorage, ToResponseMapper<Card, CardForDeck> mapper) {
         this.cardStore = cardStore;
         this.progressPort = progressPort;
-        this.cardSelector = cardSelector;
+        this.selectStrategyStorage = selectStrategyStorage;
         this.mapper = mapper;
     }
 
     @Override
-    public CardForDeck popNextCard(Long requesterId, Long subCategoryId) {
+    public CardForDeck popNextCard(Long requesterId, Long subCategoryId, PopStrategy strategy) {
 
         List<Card> cards = cardStore.findBySubCategoryId(requesterId, subCategoryId);
         Deck deck = progressPort.getDeck(subCategoryId);
         Deck synchronizeWith = deck.synchronizeWith(cards);
 
-        CardProgress nextProgress = cardSelector.pickNextCard(synchronizeWith);
+        CardProgress nextProgress = selectStrategyStorage.pickNextCard(synchronizeWith, strategy);
         CardProgress choose = nextProgress.choose();
 
         Deck updated = synchronizeWith.progressUpdate(choose);

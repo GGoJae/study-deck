@@ -44,6 +44,7 @@ import org.example.core.application.progress.mapper.CardToForDeckResponse;
 import org.example.core.application.progress.port.ProgressPort;
 import org.example.core.application.progress.selector.CardSelector;
 import org.example.core.application.progress.selector.OldestReviewedSelector;
+import org.example.core.application.progress.selector.SelectStrategyStorage;
 import org.example.core.application.progress.service.PopCardServiceV1;
 import org.example.core.application.progress.usecase.PopCardUseCase;
 import org.example.core.application.subcategory.dto.response.SubCategoryCapture;
@@ -163,9 +164,10 @@ public abstract class AppConfig {
         cardQueryUseCase = new CardQueryServiceV1(cardStore, cardToCaptureMapper, answerToCaptureMapper);
 
         ProgressPort progressPort = new ProgressJacksonAdapter(progressManager);
-        CardSelector cardSelector = new OldestReviewedSelector();
+        OldestReviewedSelector oldestReviewedSelector = new OldestReviewedSelector();
         ToResponseMapper<Card, CardForDeck> toCardForDeck = new CardToForDeckResponse();
-        popCardUseCase = new PopCardServiceV1(cardStore, progressPort, cardSelector, toCardForDeck);
+        SelectStrategyStorage selectStrategyStorage = new SelectStrategyStorage(List.of(oldestReviewedSelector));
+        popCardUseCase = new PopCardServiceV1(cardStore, progressPort, selectStrategyStorage, toCardForDeck);
 
         List<CommandExecutor> commandExecutors = cmdExecutorList(fileStoreApi, requesterInfo, output);
         DefaultCmdExecutor defaultCmdExecutor = new DefaultCmdExecutor();
